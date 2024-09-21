@@ -283,7 +283,7 @@ public class VoxelTerrain : MonoBehaviour
         {
             // When y is negative, invert the logic to handle face visibility.
             return y < neighborStartY || y > neighborEndY;
-        }
+    }
     }
 
     /// <summary>
