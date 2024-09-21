@@ -294,81 +294,81 @@ public class VoxelTerrain : MonoBehaviour
         meshData.triangles.Add(vertexIndex + 3);
         meshData.triangles.Add(vertexIndex + 0);
     }
-}
 
-/// <summary>
-/// Gets the vertices for a face in a specific direction at the given position.
-/// </summary>
-/// <param name="position">The position of the block.</param>
-/// <param name="direction">The direction the face is facing.</param>
-/// <returns>An array of vertices for the face.</returns>
-Vector3[] GetFaceVertices(Vector3 position, Vector3 direction)
-{
-    Vector3[] faceVertices = new Vector3[4];
-    float s = voxelScale;
+    /// <summary>
+    /// Gets the vertices for a face in a specific direction at the given position.
+    /// </summary>
+    /// <param name="position">The position of the block.</param>
+    /// <param name="direction">The direction the face is facing.</param>
+    /// <returns>An array of vertices for the face.</returns>
+    Vector3[] GetFaceVertices(Vector3 position, Vector3 direction)
+    {
+        Vector3[] faceVertices = new Vector3[4];
+        float s = voxelScale;
 
-    if (direction == Vector3.up)
-    {
-        // Top face.
-        faceVertices[0] = position + new Vector3(0, s, 0);
-        faceVertices[1] = position + new Vector3(0, s, s);
-        faceVertices[2] = position + new Vector3(s, s, s);
-        faceVertices[3] = position + new Vector3(s, s, 0);
-    }
-    else if (direction == Vector3.down)
-    {
-        // Bottom face.
-        faceVertices[0] = position + new Vector3(0, 0, s);
-        faceVertices[1] = position + new Vector3(0, 0, 0);
-        faceVertices[2] = position + new Vector3(s, 0, 0);
-        faceVertices[3] = position + new Vector3(s, 0, s);
-    }
-    else if (direction == Vector3.left)
-    {
-        // Left face.
-        faceVertices[0] = position + new Vector3(0, 0, 0);
-        faceVertices[1] = position + new Vector3(0, 0, s);
-        faceVertices[2] = position + new Vector3(0, s, s);
-        faceVertices[3] = position + new Vector3(0, s, 0);
-    }
-    else if (direction == Vector3.right)
-    {
-        // Right face.
-        faceVertices[0] = position + new Vector3(s, 0, s);
-        faceVertices[1] = position + new Vector3(s, 0, 0);
-        faceVertices[2] = position + new Vector3(s, s, 0);
-        faceVertices[3] = position + new Vector3(s, s, s);
-    }
-    else if (direction == Vector3.forward)
-    {
-        // Front face.
-        faceVertices[0] = position + new Vector3(0, 0, s);
-        faceVertices[1] = position + new Vector3(s, 0, s);
-        faceVertices[2] = position + new Vector3(s, s, s);
-        faceVertices[3] = position + new Vector3(0, s, s);
-    }
-    else if (direction == Vector3.back)
-    {
-        // Back face.
-        faceVertices[0] = position + new Vector3(s, 0, 0);
-        faceVertices[1] = position + new Vector3(0, 0, 0);
-        faceVertices[2] = position + new Vector3(0, s, 0);
-        faceVertices[3] = position + new Vector3(s, s, 0);
+        if (direction == Vector3.up)
+        {
+            // Top face.
+            faceVertices[0] = position + new Vector3(0, s, 0);
+            faceVertices[1] = position + new Vector3(0, s, s);
+            faceVertices[2] = position + new Vector3(s, s, s);
+            faceVertices[3] = position + new Vector3(s, s, 0);
+        }
+        else if (direction == Vector3.down)
+        {
+            // Bottom face.
+            faceVertices[0] = position + new Vector3(0, 0, s);
+            faceVertices[1] = position + new Vector3(0, 0, 0);
+            faceVertices[2] = position + new Vector3(s, 0, 0);
+            faceVertices[3] = position + new Vector3(s, 0, s);
+        }
+        else if (direction == Vector3.left)
+        {
+            // Left face.
+            faceVertices[0] = position + new Vector3(0, 0, 0);
+            faceVertices[1] = position + new Vector3(0, 0, s);
+            faceVertices[2] = position + new Vector3(0, s, s);
+            faceVertices[3] = position + new Vector3(0, s, 0);
+        }
+        else if (direction == Vector3.right)
+        {
+            // Right face.
+            faceVertices[0] = position + new Vector3(s, 0, s);
+            faceVertices[1] = position + new Vector3(s, 0, 0);
+            faceVertices[2] = position + new Vector3(s, s, 0);
+            faceVertices[3] = position + new Vector3(s, s, s);
+        }
+        else if (direction == Vector3.forward)
+        {
+            // Front face.
+            faceVertices[0] = position + new Vector3(0, 0, s);
+            faceVertices[1] = position + new Vector3(s, 0, s);
+            faceVertices[2] = position + new Vector3(s, s, s);
+            faceVertices[3] = position + new Vector3(0, s, s);
+        }
+        else if (direction == Vector3.back)
+        {
+            // Back face.
+            faceVertices[0] = position + new Vector3(s, 0, 0);
+            faceVertices[1] = position + new Vector3(0, 0, 0);
+            faceVertices[2] = position + new Vector3(0, s, 0);
+            faceVertices[3] = position + new Vector3(s, s, 0);
+        }
+
+        return faceVertices;
     }
 
-    return faceVertices;
-}
-
-/// <summary>
-/// Converts a world position to chunk coordinates.
-/// </summary>
-/// <param name="position">The world position.</param>
-/// <returns>The chunk coordinates as a Vector2Int.</returns>
-Vector2Int GetChunkCoordFromPosition(Vector3 position)
-{
-    int x = Mathf.FloorToInt(position.x / (chunkSize * voxelScale));
-    int z = Mathf.FloorToInt(position.z / (chunkSize * voxelScale));
-    return new Vector2Int(x, z);
+    /// <summary>
+    /// Converts a world position to chunk coordinates.
+    /// </summary>
+    /// <param name="position">The world position.</param>
+    /// <returns>The chunk coordinates as a Vector2Int.</returns>
+    Vector2Int GetChunkCoordFromPosition(Vector3 position)
+    {
+        int x = Mathf.FloorToInt(position.x / (chunkSize * voxelScale));
+        int z = Mathf.FloorToInt(position.z / (chunkSize * voxelScale));
+        return new Vector2Int(x, z);
+    }
 }
 
 /// <summary>
