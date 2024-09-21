@@ -11,14 +11,14 @@ public class PlayerMovement : MonoBehaviour
 
     [Header("Jumping Settings")]
     public float jumpHeight = 1.5f;
-    public float gravity = -9.81f;
+    public float gravity = -18f;
     public float jumpTimeout = 0.1f;
     public float fallTimeout = 0.15f;
 
     [Header("Grounded Settings")]
     public bool isGrounded = true;
-    public float groundedOffset = -0.14f;
-    public float groundedRadius = 0.28f;
+    public float groundedOffset = 1f;
+    public float groundedRadius = 0.3f;
     public LayerMask groundLayers;
 
     private float _speed;
