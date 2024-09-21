@@ -580,11 +580,11 @@ MonoBehaviour:
   jumpTimeout: 0.1
   fallTimeout: 0.15
   isGrounded: 1
-  groundedOffset: -0.14
-  groundedRadius: 0.28
+  groundedOffset: 1
+  groundedRadius: 0.3
   groundLayers:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 64
 --- !u!1 &1030895101
 GameObject:
   m_ObjectHideFlags: 0
