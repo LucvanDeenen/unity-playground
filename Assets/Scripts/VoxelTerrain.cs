@@ -46,6 +46,9 @@ public class VoxelTerrain : MonoBehaviour
 
     // Dictionary to keep track of generated chunks using their coordinates as keys.
     private Dictionary<Vector2Int, GameObject> chunkDictionary = new Dictionary<Vector2Int, GameObject>();
+    
+    // Workaround for preventing issues with rendering
+    private float baseHeight = 20f;
 
     /// <summary>
     /// Initializes the terrain by generating initial chunks around the player.
@@ -182,8 +185,8 @@ public class VoxelTerrain : MonoBehaviour
                     frequency *= lacunarity;
                 }
 
-                // Apply height multiplier and store in height map.
-                float height = noiseHeight * heightMultiplier;
+                // Apply height multiplier and add baseHeight.
+                float height = noiseHeight * heightMultiplier + baseHeight;
 
                 heightMap[x, z] = Mathf.RoundToInt(height);
             }
@@ -254,8 +257,8 @@ public class VoxelTerrain : MonoBehaviour
     /// </summary>
     /// <param name="heightMap">The height map of the chunk.</param>
     /// <param name="x">X-coordinate in the height map.</param>
-    /// <param name="z">Z-coordinate in the height map.</param>
-    /// <param name="y">Current Y-level being evaluated.</param>
+    /// <param="z">Z-coordinate in the height map.</param>
+    /// <param="y">Current Y-level being evaluated.</param>
     /// <returns>True if the face should be visible; otherwise, false.</returns>
     bool IsFaceVisible(int[,] heightMap, int x, int z, int y)
     {
@@ -266,10 +269,20 @@ public class VoxelTerrain : MonoBehaviour
         }
 
         int neighborColumnHeight = heightMap[x, z];
-        int neighborStartY = Mathf.Min(0, neighborColumnHeight);
-        int neighborEndY = Mathf.Max(0, neighborColumnHeight);
+        int neighborStartY = Mathf.Min(0, neighborColumnHeight); // Consider negative y-values.
+        int neighborEndY = Mathf.Max(0, neighborColumnHeight);   // Consider positive y-values.
 
-        return y > neighborEndY || y < neighborStartY;
+        // Adjust the logic for visibility when y < 0.
+        if (y >= 0)
+        {
+            // Standard case when y is above or equal to 0.
+            return y > neighborEndY || y < neighborStartY;
+        }
+        else
+        {
+            // When y is negative, invert the logic to handle face visibility.
+            return y < neighborStartY || y > neighborEndY;
+        }
     }
 
     /// <summary>
@@ -285,7 +298,7 @@ public class VoxelTerrain : MonoBehaviour
 
         meshData.vertices.AddRange(faceVertices);
 
-        // Define triangles in clockwise order
+        // Define triangles in clockwise order.
         meshData.triangles.Add(vertexIndex + 0);
         meshData.triangles.Add(vertexIndex + 1);
         meshData.triangles.Add(vertexIndex + 2);
