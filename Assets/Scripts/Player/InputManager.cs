@@ -7,6 +7,11 @@ public class InputManager : MonoBehaviour
     public bool jump;     // Stores jump input
     public bool sprint;   // Stores sprint input
 
+    private void Start()
+    {
+        Cursor.visible = false;
+    }
+
     private void Update()
     {
         // Capture movement input
@@ -18,7 +23,7 @@ public class InputManager : MonoBehaviour
         look.y = Input.GetAxis("Mouse Y");
 
         // Capture jump input
-        jump = Input.GetButtonDown("Jump");    // Spacebar
+        jump = Input.GetKeyDown(KeyCode.Space);    // Spacebar
 
         // Capture sprint input
         sprint = Input.GetKey(KeyCode.LeftShift);

@@ -4,22 +4,22 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     [Header("Movement Settings")]
-    public float moveSpeed = 5f;             // Base movement speed
-    public float sprintSpeed = 8f;           // Sprinting speed
-    public float rotationSpeed = 10f;        // Speed of turning
-    public float acceleration = 10f;         // Acceleration and deceleration rate
+    public float moveSpeed = 5f;
+    public float sprintSpeed = 8f;
+    public float rotationSpeed = 10f;
+    public float acceleration = 10f;
 
     [Header("Jumping Settings")]
-    public float jumpHeight = 1.5f;          // Height of the jump
-    public float gravity = -9.81f;           // Gravity force
-    public float jumpTimeout = 0.1f;         // Time before next jump is allowed
-    public float fallTimeout = 0.15f;        // Time before entering fall state
+    public float jumpHeight = 1.5f;
+    public float gravity = -9.81f;
+    public float jumpTimeout = 0.1f;
+    public float fallTimeout = 0.15f;
 
     [Header("Grounded Settings")]
     public bool isGrounded = true;
-    public float groundedOffset = -0.14f;    // Offset for ground detection
-    public float groundedRadius = 0.28f;     // Radius of ground detection sphere
-    public LayerMask groundLayers;           // Layers considered as ground
+    public float groundedOffset = -0.14f;
+    public float groundedRadius = 0.28f;
+    public LayerMask groundLayers;
 
     private float _speed;
     private float _verticalVelocity;
@@ -33,7 +33,6 @@ public class PlayerMovement : MonoBehaviour
 
     private void Awake()
     {
-        // Get reference to main camera
         if (_mainCamera == null)
         {
             _mainCamera = Camera.main.gameObject;
@@ -57,52 +56,49 @@ public class PlayerMovement : MonoBehaviour
         Move();
     }
 
+    /// <summary>
+    /// Checks whether the character is grounded.
+    /// </summary>
     private void GroundedCheck()
     {
-        // Check if the character is grounded using a sphere at the character's feet
         Vector3 spherePosition = new Vector3(transform.position.x, transform.position.y - groundedOffset, transform.position.z);
         isGrounded = Physics.CheckSphere(spherePosition, groundedRadius, groundLayers, QueryTriggerInteraction.Ignore);
     }
 
+    /// <summary>
+    /// Handles player movement.
+    /// </summary>
     private void Move()
     {
-        // Determine target speed based on input and sprinting
         float targetSpeed = _input.sprint ? sprintSpeed : moveSpeed;
-
-        // If no input, slow down
         if (_input.move == Vector2.zero) targetSpeed = 0.0f;
 
-        // Smoothly interpolate to target speed
         _speed = Mathf.Lerp(_speed, targetSpeed, Time.deltaTime * acceleration);
 
-        // Get movement input
         Vector2 input = _input.move;
 
-        // Get camera's forward and right vectors
         Vector3 cameraForward = _mainCamera.transform.forward;
         Vector3 cameraRight = _mainCamera.transform.right;
-
-        // Zero out the y-component to keep movement on the horizontal plane
         cameraForward.y = 0f;
         cameraRight.y = 0f;
         cameraForward.Normalize();
         cameraRight.Normalize();
 
-        // Calculate move direction relative to the camera
         Vector3 moveDirection = (cameraForward * input.y + cameraRight * input.x).normalized;
 
         if (moveDirection != Vector3.zero)
         {
-            // Rotate the player to face the movement direction
             Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
         }
 
-        // Apply movement and vertical velocity (gravity or jump)
         Vector3 movement = moveDirection * (_speed * Time.deltaTime) + Vector3.up * _verticalVelocity * Time.deltaTime;
         _controller.Move(movement);
     }
 
+    /// <summary>
+    /// Handles jump and gravity.
+    /// </summary>
     private void JumpAndGravity()
     {
         if (isGrounded)
@@ -110,23 +106,20 @@ public class PlayerMovement : MonoBehaviour
             // Reset fall timeout
             _fallTimeoutDelta = fallTimeout;
 
-            // Stop vertical velocity if grounded
+            // Stop downward velocity when grounded
             if (_verticalVelocity < 0.0f)
             {
                 _verticalVelocity = -2f;
             }
 
-            // Jump
+            // Handle jump
             if (_input.jump && _jumpTimeoutDelta <= 0.0f)
             {
-                // Calculate the velocity needed to achieve the jump height
                 _verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
-
-                // Reset jump timeout
-                _jumpTimeoutDelta = jumpTimeout;
+                _jumpTimeoutDelta = jumpTimeout; // Reset jump timeout
             }
 
-            // Jump timeout
+            // Handle jump timeout decrement
             if (_jumpTimeoutDelta > 0.0f)
             {
                 _jumpTimeoutDelta -= Time.deltaTime;
@@ -137,20 +130,17 @@ public class PlayerMovement : MonoBehaviour
             // Reset jump timeout
             _jumpTimeoutDelta = jumpTimeout;
 
-            // Fall timeout
+            // Apply gravity when in the air
+            if (_verticalVelocity < _terminalVelocity)
+            {
+                _verticalVelocity += gravity * Time.deltaTime;
+            }
+
+            // Fall timeout decrement
             if (_fallTimeoutDelta > 0.0f)
             {
                 _fallTimeoutDelta -= Time.deltaTime;
             }
-
-            // Disable jump input while in air
-            _input.jump = false;
-        }
-
-        // Apply gravity
-        if (_verticalVelocity < _terminalVelocity)
-        {
-            _verticalVelocity += gravity * Time.deltaTime;
         }
     }
 }
