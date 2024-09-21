@@ -649,7 +649,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   player: {fileID: 1000461538}
   chunkSize: 32
-  renderDistance: 2
+  renderDistance: 1
   voxelScale: 0.75
   seed: 42
   heightMultiplier: 15
