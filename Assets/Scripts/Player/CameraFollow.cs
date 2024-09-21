@@ -2,44 +2,46 @@ using UnityEngine;
 
 public class CameraFollow : MonoBehaviour
 {
-    public Transform player;
-    public Vector3 offset = new Vector3(0f, 5f, -10f);
-    public float smoothSpeed = 0.125f;
-    public float mouseSensitivity = 100f;
-    private float currentRotationX = 0f;
-    private float currentRotationY = 0f;
+    public Transform player;                   // Reference to the player transform
+    public Vector3 offset = new Vector3(0f, 2f, -5f); // Offset from the player
+    public float rotationSpeed = 5f;           // Speed of camera rotation
+    public float mouseSensitivity = 10f;       // Sensitivity of mouse input
+    public float minPitch = -35f;              // Minimum vertical angle
+    public float maxPitch = 60f;               // Maximum vertical angle
+
+    private float _pitch = 0.0f;
+    private float _yaw = 0.0f;
+
+    private InputManager _input;
 
     private void Start()
     {
-        // Hide the cursor in play mode
-        Cursor.lockState = CursorLockMode.Locked; // Hide and lock cursor
-        Cursor.visible = false; // Optionally set to false
+        _input = player.GetComponent<InputManager>();
     }
 
     private void LateUpdate()
     {
+        if (_input == null) return;
+
         // Get mouse input
-        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
-        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
+        float mouseX = _input.look.x * mouseSensitivity;
+        float mouseY = _input.look.y * mouseSensitivity;
 
-        // Update rotation values (clamp Y to prevent excessive up/down rotation)
-        currentRotationY += mouseX; // Control player rotation on Y-axis
-        currentRotationX -= mouseY;
-        currentRotationX = Mathf.Clamp(currentRotationX, -35f, 60f);  // Adjust the clamp as needed
+        // Update rotation values
+        _yaw += mouseX * Time.deltaTime;
+        _pitch -= mouseY * Time.deltaTime;
+        _pitch = Mathf.Clamp(_pitch, minPitch, maxPitch);
 
-        // Apply rotation to the camera
-        Quaternion rotation = Quaternion.Euler(currentRotationX, currentRotationY, 0f);
+        // Create rotation based on yaw and pitch
+        Quaternion rotation = Quaternion.Euler(_pitch, _yaw, 0f);
+
+        // Calculate the desired position
         Vector3 desiredPosition = player.position + rotation * offset;
-        transform.position = Vector3.Lerp(transform.position, desiredPosition, smoothSpeed);
 
-        // Always look at the player
-        transform.LookAt(player);
+        // Set camera position
+        transform.position = desiredPosition;
 
-        // Rotate player to face the camera's forward direction
-        player.rotation = Quaternion.Euler(0f, currentRotationY, 0f);
-
-        // Optional: Rotate player on Z-axis based on mouse input (not typical for third-person)
-        // float playerZRotation = mouseY * mouseSensitivity; 
-        // player.Rotate(0f, 0f, playerZRotation);
+        // Look at the player
+        transform.LookAt(player.position + Vector3.up * 1.5f); // Adjust vertical offset as needed
     }
 }
