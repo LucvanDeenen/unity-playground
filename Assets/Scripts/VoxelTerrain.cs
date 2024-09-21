@@ -21,6 +21,9 @@ public class VoxelTerrain : MonoBehaviour
     public float voxelScale = 0.75f;
 
     [Header("Terrain Noise Settings")]
+    [Tooltip("Seed for randomizing the noise.")]
+    public int seed = 42;
+
     [Tooltip("Scale of the Perlin noise used for terrain generation.")]
     public float noiseScale = 0.005f;
 
@@ -36,9 +39,6 @@ public class VoxelTerrain : MonoBehaviour
 
     [Tooltip("Controls frequency of each octave.")]
     public float lacunarity = 2f;
-
-    [Tooltip("Seed for randomizing the noise.")]
-    public int seed = 42;
 
     [Header("Visual Settings")]
     [Tooltip("Material to apply to the voxels.")]
