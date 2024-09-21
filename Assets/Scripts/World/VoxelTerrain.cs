@@ -122,6 +122,12 @@ public class VoxelTerrain : MonoBehaviour
         chunkObject.transform.parent = transform;
         Vector3 chunkPosition = new Vector3(chunkCoord.x * chunkSize * voxelScale, 0, chunkCoord.y * chunkSize * voxelScale);
         chunkObject.transform.position = chunkPosition;
+        
+        // Set the ground tag
+        chunkObject.tag = "Ground";
+
+        // Optionally set the layer of the chunk to match the GroundLayers mask
+        chunkObject.layer = LayerMask.NameToLayer("Ground");
 
         // Generate mesh data for the chunk.
         MeshData meshData = GenerateChunkMesh(chunkCoord);
@@ -283,7 +289,7 @@ public class VoxelTerrain : MonoBehaviour
         {
             // When y is negative, invert the logic to handle face visibility.
             return y < neighborStartY || y > neighborEndY;
-    }
+        }
     }
 
     /// <summary>
