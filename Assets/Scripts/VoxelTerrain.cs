@@ -1,56 +1,96 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Generates voxel-based terrain using Perlin noise and manages chunk loading around the player.
+/// </summary>
 public class VoxelTerrain : MonoBehaviour
 {
-    public Transform player;                        // Reference to the player's Transform
-    public int chunkSize = 32;                      // Size of each chunk
-    public int renderDistance = 20;                 // Number of chunks to generate around the player
-    public float voxelScale = 0.75f;                // Scale of each voxel
-    public float noiseScale = 0.005f;               // Adjusted scale of the Perlin noise
-    public float heightMultiplier = 10f;            // Height multiplier for the terrain
-    public int octaves = 6;                         // Number of noise layers
-    public float persistence = 0.5f;                // Controls amplitude of each octave
-    public float lacunarity = 2f;                   // Controls frequency of each octave
-    public int seed = 42;                           // Seed for randomizing noise
-    public Material voxelMaterial;                  // Material to apply to the voxels
+    [Header("Player Settings")]
+    [Tooltip("Reference to the player's Transform.")]
+    public Transform player;
 
+    [Header("Chunk Settings")]
+    [Tooltip("Size of each chunk (number of voxels along one edge).")]
+    public int chunkSize = 32;
+
+    [Tooltip("Number of chunks to generate around the player in each direction.")]
+    public int renderDistance = 5;
+
+    [Tooltip("Scale of each voxel (size of the voxel cube).")]
+    public float voxelScale = 0.75f;
+
+    [Header("Terrain Noise Settings")]
+    [Tooltip("Scale of the Perlin noise used for terrain generation.")]
+    public float noiseScale = 0.005f;
+
+    [Tooltip("Height multiplier to scale the terrain height.")]
+    public float heightMultiplier = 10f;
+
+    [Tooltip("Number of noise layers (octaves) for fractal noise.")]
+    public int octaves = 4;
+
+    [Tooltip("Controls amplitude of each octave.")]
+    [Range(0f, 1f)]
+    public float persistence = 0.5f;
+
+    [Tooltip("Controls frequency of each octave.")]
+    public float lacunarity = 2f;
+
+    [Tooltip("Seed for randomizing the noise.")]
+    public int seed = 42;
+
+    [Header("Visual Settings")]
+    [Tooltip("Material to apply to the voxels.")]
+    public Material voxelMaterial;
+
+    // Dictionary to keep track of generated chunks using their coordinates as keys.
     private Dictionary<Vector2Int, GameObject> chunkDictionary = new Dictionary<Vector2Int, GameObject>();
 
+    /// <summary>
+    /// Initializes the terrain by generating initial chunks around the player.
+    /// </summary>
     void Start()
     {
-        UpdateChunks();  // Generate initial chunks around the player
+        UpdateChunks();
     }
 
+    /// <summary>
+    /// Updates the terrain chunks every frame based on the player's position.
+    /// </summary>
     void Update()
     {
-        UpdateChunks();  // Update chunks as the player moves
+        UpdateChunks();
     }
 
+    /// <summary>
+    /// Updates the chunks around the player by generating new ones and removing distant ones.
+    /// </summary>
     void UpdateChunks()
     {
         Vector2Int playerChunkCoord = GetChunkCoordFromPosition(player.position);
 
-        // Determine which chunks should be active
+        // List of chunks that should remain active.
         List<Vector2Int> activeChunks = new List<Vector2Int>();
 
+        // Determine the range of chunks to be generated around the player.
         for (int xOffset = -renderDistance; xOffset <= renderDistance; xOffset++)
         {
             for (int zOffset = -renderDistance; zOffset <= renderDistance; zOffset++)
             {
-                Vector2Int chunkCoord = new Vector2Int(playerChunkCoord.x + xOffset, playerChunkCoord.y + zOffset); // Use y for z coordinate
+                Vector2Int chunkCoord = new Vector2Int(playerChunkCoord.x + xOffset, playerChunkCoord.y + zOffset);
                 activeChunks.Add(chunkCoord);
 
                 if (!chunkDictionary.ContainsKey(chunkCoord))
                 {
-                    // Generate and store new chunk
+                    // Generate and store new chunk.
                     GameObject chunkObject = GenerateChunk(chunkCoord);
                     chunkDictionary.Add(chunkCoord, chunkObject);
                 }
             }
         }
 
-        // Remove chunks that are no longer within the render distance
+        // Remove chunks that are no longer within the render distance.
         List<Vector2Int> chunksToRemove = new List<Vector2Int>();
         foreach (var chunk in chunkDictionary)
         {
@@ -66,17 +106,23 @@ public class VoxelTerrain : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Generates a chunk at the specified coordinate.
+    /// </summary>
+    /// <param name="chunkCoord">The coordinate of the chunk to generate.</param>
+    /// <returns>The generated chunk GameObject.</returns>
     GameObject GenerateChunk(Vector2Int chunkCoord)
     {
+        // Create a new GameObject for the chunk.
         GameObject chunkObject = new GameObject($"Chunk_{chunkCoord.x}_{chunkCoord.y}");
         chunkObject.transform.parent = transform;
         Vector3 chunkPosition = new Vector3(chunkCoord.x * chunkSize * voxelScale, 0, chunkCoord.y * chunkSize * voxelScale);
         chunkObject.transform.position = chunkPosition;
 
-        // Generate mesh data for the chunk
+        // Generate mesh data for the chunk.
         MeshData meshData = GenerateChunkMesh(chunkCoord);
 
-        // Create mesh from mesh data
+        // Create mesh from mesh data.
         MeshFilter meshFilter = chunkObject.AddComponent<MeshFilter>();
         MeshRenderer meshRenderer = chunkObject.AddComponent<MeshRenderer>();
 
@@ -88,15 +134,20 @@ public class VoxelTerrain : MonoBehaviour
         mesh.RecalculateNormals();
 
         meshFilter.mesh = mesh;
-        meshRenderer.material = voxelMaterial;  // Assign the voxel material
+        meshRenderer.material = voxelMaterial;  // Assign the voxel material.
 
-        // Optional: Add Mesh Collider
+        // Optional: Add Mesh Collider.
         MeshCollider meshCollider = chunkObject.AddComponent<MeshCollider>();
         meshCollider.sharedMesh = mesh;
 
         return chunkObject;
     }
 
+    /// <summary>
+    /// Generates the mesh data for a chunk at the specified coordinate.
+    /// </summary>
+    /// <param name="chunkCoord">The coordinate of the chunk.</param>
+    /// <returns>The generated mesh data.</returns>
     MeshData GenerateChunkMesh(Vector2Int chunkCoord)
     {
         MeshData meshData = new MeshData();
@@ -106,7 +157,7 @@ public class VoxelTerrain : MonoBehaviour
         float offsetX = prng.Next(-100000, 100000);
         float offsetZ = prng.Next(-100000, 100000);
 
-        // Generate height map for the chunk
+        // Generate height map for the chunk.
         for (int x = 0; x <= chunkSize; x++)
         {
             for (int z = 0; z <= chunkSize; z++)
@@ -114,7 +165,7 @@ public class VoxelTerrain : MonoBehaviour
                 int worldX = chunkCoord.x * chunkSize + x;
                 int worldZ = chunkCoord.y * chunkSize + z;
 
-                // Calculate height using fractal noise (multiple octaves)
+                // Calculate height using fractal noise (multiple octaves).
                 float amplitude = 1f;
                 float frequency = 1f;
                 float noiseHeight = 0f;
@@ -124,21 +175,21 @@ public class VoxelTerrain : MonoBehaviour
                     float sampleX = (worldX + offsetX) * noiseScale * frequency;
                     float sampleZ = (worldZ + offsetZ) * noiseScale * frequency;
 
-                    float perlinValue = Mathf.PerlinNoise(sampleX, sampleZ) * 2 - 1; // Adjusted to range [-1, 1]
+                    float perlinValue = Mathf.PerlinNoise(sampleX, sampleZ) * 2 - 1; // Adjusted to range [-1, 1].
                     noiseHeight += perlinValue * amplitude;
 
                     amplitude *= persistence;
                     frequency *= lacunarity;
                 }
 
-                // Apply height multiplier and store in height map
+                // Apply height multiplier and store in height map.
                 float height = noiseHeight * heightMultiplier;
 
                 heightMap[x, z] = Mathf.RoundToInt(height);
             }
         }
 
-        // Generate mesh data based on the height map
+        // Generate mesh data based on the height map.
         for (int x = 0; x < chunkSize; x++)
         {
             for (int z = 0; z < chunkSize; z++)
@@ -152,36 +203,41 @@ public class VoxelTerrain : MonoBehaviour
                 {
                     Vector3 blockPosition = new Vector3(x * voxelScale, y * voxelScale, z * voxelScale);
 
-                    // Add faces for the block at this position and height
-                    // Top face (only for the topmost block)
+                    // Add faces for the block at this position and height.
+
+                    // Top face (only for the topmost block).
                     if (y == columnHeight)
                     {
                         AddVoxelFace(meshData, blockPosition, Vector3.up);
                     }
 
-                    // Bottom face (only for the bottommost block)
+                    // Bottom face (only for the bottommost block).
                     if (y == startY)
                     {
                         AddVoxelFace(meshData, blockPosition, Vector3.down);
                     }
 
-                    // Side faces
-                    // Left face
+                    // Side faces.
+
+                    // Left face.
                     if (x == 0 || IsFaceVisible(heightMap, x - 1, z, y))
                     {
                         AddVoxelFace(meshData, blockPosition, Vector3.left);
                     }
-                    // Right face
+
+                    // Right face.
                     if (x == chunkSize - 1 || IsFaceVisible(heightMap, x + 1, z, y))
                     {
                         AddVoxelFace(meshData, blockPosition, Vector3.right);
                     }
-                    // Back face
+
+                    // Back face.
                     if (z == 0 || IsFaceVisible(heightMap, x, z - 1, y))
                     {
                         AddVoxelFace(meshData, blockPosition, Vector3.back);
                     }
-                    // Front face
+
+                    // Front face.
                     if (z == chunkSize - 1 || IsFaceVisible(heightMap, x, z + 1, y))
                     {
                         AddVoxelFace(meshData, blockPosition, Vector3.forward);
@@ -193,11 +249,19 @@ public class VoxelTerrain : MonoBehaviour
         return meshData;
     }
 
+    /// <summary>
+    /// Determines if a face should be visible based on the neighboring block's height.
+    /// </summary>
+    /// <param name="heightMap">The height map of the chunk.</param>
+    /// <param name="x">X-coordinate in the height map.</param>
+    /// <param name="z">Z-coordinate in the height map.</param>
+    /// <param name="y">Current Y-level being evaluated.</param>
+    /// <returns>True if the face should be visible; otherwise, false.</returns>
     bool IsFaceVisible(int[,] heightMap, int x, int z, int y)
     {
         if (x < 0 || x >= heightMap.GetLength(0) || z < 0 || z >= heightMap.GetLength(1))
         {
-            // Neighbor is outside the chunk; face is visible
+            // Neighbor is outside the chunk; face is visible.
             return true;
         }
 
@@ -208,6 +272,12 @@ public class VoxelTerrain : MonoBehaviour
         return y > neighborEndY || y < neighborStartY;
     }
 
+    /// <summary>
+    /// Adds a face to the mesh data in the specified direction at the given position.
+    /// </summary>
+    /// <param name="meshData">The mesh data to add the face to.</param>
+    /// <param name="position">The position of the block.</param>
+    /// <param name="direction">The direction the face is facing.</param>
     void AddVoxelFace(MeshData meshData, Vector3 position, Vector3 direction)
     {
         Vector3[] faceVertices = GetFaceVertices(position, direction);
@@ -216,15 +286,22 @@ public class VoxelTerrain : MonoBehaviour
         meshData.vertices.AddRange(faceVertices);
 
         // Define triangles in clockwise order
-        meshData.triangles.Add(vertexIndex + 0);
-        meshData.triangles.Add(vertexIndex + 1);
-        meshData.triangles.Add(vertexIndex + 2);
+            meshData.triangles.Add(vertexIndex + 0);
+            meshData.triangles.Add(vertexIndex + 1);
+            meshData.triangles.Add(vertexIndex + 2);
 
-        meshData.triangles.Add(vertexIndex + 2);
-        meshData.triangles.Add(vertexIndex + 3);
-        meshData.triangles.Add(vertexIndex + 0);
+            meshData.triangles.Add(vertexIndex + 2);
+            meshData.triangles.Add(vertexIndex + 3);
+            meshData.triangles.Add(vertexIndex + 0);
+        }
     }
 
+    /// <summary>
+    /// Gets the vertices for a face in a specific direction at the given position.
+    /// </summary>
+    /// <param name="position">The position of the block.</param>
+    /// <param name="direction">The direction the face is facing.</param>
+    /// <returns>An array of vertices for the face.</returns>
     Vector3[] GetFaceVertices(Vector3 position, Vector3 direction)
     {
         Vector3[] faceVertices = new Vector3[4];
@@ -232,7 +309,7 @@ public class VoxelTerrain : MonoBehaviour
 
         if (direction == Vector3.up)
         {
-            // Top face
+            // Top face.
             faceVertices[0] = position + new Vector3(0, s, 0);
             faceVertices[1] = position + new Vector3(0, s, s);
             faceVertices[2] = position + new Vector3(s, s, s);
@@ -240,7 +317,7 @@ public class VoxelTerrain : MonoBehaviour
         }
         else if (direction == Vector3.down)
         {
-            // Bottom face
+            // Bottom face.
             faceVertices[0] = position + new Vector3(0, 0, s);
             faceVertices[1] = position + new Vector3(0, 0, 0);
             faceVertices[2] = position + new Vector3(s, 0, 0);
@@ -248,7 +325,7 @@ public class VoxelTerrain : MonoBehaviour
         }
         else if (direction == Vector3.left)
         {
-            // Left face
+            // Left face.
             faceVertices[0] = position + new Vector3(0, 0, 0);
             faceVertices[1] = position + new Vector3(0, 0, s);
             faceVertices[2] = position + new Vector3(0, s, s);
@@ -256,7 +333,7 @@ public class VoxelTerrain : MonoBehaviour
         }
         else if (direction == Vector3.right)
         {
-            // Right face
+            // Right face.
             faceVertices[0] = position + new Vector3(s, 0, s);
             faceVertices[1] = position + new Vector3(s, 0, 0);
             faceVertices[2] = position + new Vector3(s, s, 0);
@@ -264,7 +341,7 @@ public class VoxelTerrain : MonoBehaviour
         }
         else if (direction == Vector3.forward)
         {
-            // Front face
+            // Front face.
             faceVertices[0] = position + new Vector3(0, 0, s);
             faceVertices[1] = position + new Vector3(s, 0, s);
             faceVertices[2] = position + new Vector3(s, s, s);
@@ -272,7 +349,7 @@ public class VoxelTerrain : MonoBehaviour
         }
         else if (direction == Vector3.back)
         {
-            // Back face
+            // Back face.
             faceVertices[0] = position + new Vector3(s, 0, 0);
             faceVertices[1] = position + new Vector3(0, 0, 0);
             faceVertices[2] = position + new Vector3(0, s, 0);
@@ -282,16 +359,31 @@ public class VoxelTerrain : MonoBehaviour
         return faceVertices;
     }
 
+    /// <summary>
+    /// Converts a world position to chunk coordinates.
+    /// </summary>
+    /// <param name="position">The world position.</param>
+    /// <returns>The chunk coordinates as a Vector2Int.</returns>
     Vector2Int GetChunkCoordFromPosition(Vector3 position)
     {
         int x = Mathf.FloorToInt(position.x / (chunkSize * voxelScale));
         int z = Mathf.FloorToInt(position.z / (chunkSize * voxelScale));
-        return new Vector2Int(x, z); // Return (x, z) as (x, y) in Vector2Int
+        return new Vector2Int(x, z);
     }
 }
 
+/// <summary>
+/// Represents mesh data containing vertices and triangles.
+/// </summary>
 public class MeshData
 {
+    /// <summary>
+    /// The list of vertices in the mesh.
+    /// </summary>
     public List<Vector3> vertices = new List<Vector3>();
+
+    /// <summary>
+    /// The list of triangle indices in the mesh.
+    /// </summary>
     public List<int> triangles = new List<int>();
 }
