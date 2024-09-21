@@ -2,53 +2,25 @@ using UnityEngine;
 
 public class InputManager : MonoBehaviour
 {
-    [Header("Character Input Values")]
-    public Vector2 move;      // Movement input
-    public Vector2 look;      // Camera look input
-    public bool jump;         // Jump input
-    public bool sprint;       // Sprint input
-
-    [Header("Mouse Settings")]
-    public bool cursorLocked = true;
+    public Vector2 move;  // Stores movement input (WASD)
+    public Vector2 look;  // Stores mouse movement input
+    public bool jump;     // Stores jump input
+    public bool sprint;   // Stores sprint input
 
     private void Update()
     {
-        MoveInput();
-        LookInput();
-        JumpInput();
-        SprintInput();
-    }
+        // Capture movement input
+        move.x = Input.GetAxis("Horizontal");  // A/D or Left/Right
+        move.y = Input.GetAxis("Vertical");    // W/S or Up/Down
 
-    private void MoveInput()
-    {
-        move.x = Input.GetAxisRaw("Horizontal");
-        move.y = Input.GetAxisRaw("Vertical");
-    }
-
-    private void LookInput()
-    {
+        // Capture look input
         look.x = Input.GetAxis("Mouse X");
         look.y = Input.GetAxis("Mouse Y");
-    }
 
-    private void JumpInput()
-    {
-        jump = Input.GetButtonDown("Jump");
-    }
+        // Capture jump input
+        jump = Input.GetButtonDown("Jump");    // Spacebar
 
-    private void SprintInput()
-    {
+        // Capture sprint input
         sprint = Input.GetKey(KeyCode.LeftShift);
-    }
-
-    private void OnApplicationFocus(bool hasFocus)
-    {
-        SetCursorState(cursorLocked);
-    }
-
-    private void SetCursorState(bool newState)
-    {
-        Cursor.lockState = newState ? CursorLockMode.Locked : CursorLockMode.None;
-        Cursor.visible = !newState;
     }
 }
