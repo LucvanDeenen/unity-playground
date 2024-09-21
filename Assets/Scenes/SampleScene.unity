@@ -522,14 +522,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   player: {fileID: 1000461538}
   chunkSize: 32
-  renderDistance: 2
+  renderDistance: 20
   voxelScale: 0.75
-  noiseScale: 0.025
-  heightMultiplier: 20
-  octaves: 6
-  persistence: 0.5
-  lacunarity: 2
   seed: 42
+  heightMultiplier: 46.8
+  noiseScale: 0.005
+  octaves: 6
+  persistence: 0.1
+  lacunarity: 5
   voxelMaterial: {fileID: 2100000, guid: 7c480906a069a8a4b9b111d94052f14d, type: 2}
 --- !u!4 &1844900041
 Transform:

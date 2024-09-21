@@ -7,46 +7,47 @@ using UnityEngine;
 public class VoxelTerrain : MonoBehaviour
 {
     [Header("Player Settings")]
-    [Tooltip("Reference to the player's Transform.")]
+    [Tooltip("The player Transform reference. This is used to track the player's position and load chunks around the player.")]
     public Transform player;
 
     [Header("Chunk Settings")]
-    [Tooltip("Size of each chunk (number of voxels along one edge).")]
+    [Tooltip("Defines the size of each chunk in terms of the number of voxels per edge. Larger values create bigger chunks with more voxels.")]
     public int chunkSize = 32;
 
-    [Tooltip("Number of chunks to generate around the player in each direction.")]
-    public int renderDistance = 5;
+    [Tooltip("The radius around the player within which chunks are generated. This is measured in chunks. Higher values increase the render distance but may affect performance.")]
+    public int renderDistance = 20;
 
-    [Tooltip("Scale of each voxel (size of the voxel cube).")]
+    [Tooltip("The physical size of each voxel block. Smaller values create more detailed terrain, while larger values result in larger blocks.")]
     public float voxelScale = 0.75f;
 
     [Header("Terrain Noise Settings")]
-    [Tooltip("Seed for randomizing the noise.")]
+    [Tooltip("The seed value for generating consistent terrain noise. Changing the seed will result in different terrain being generated.")]
     public int seed = 42;
 
-    [Tooltip("Height multiplier to scale the terrain height.")]
-    public float heightMultiplier = 6f;
+    [Tooltip("Multiplier applied to the height of the terrain. Higher values result in taller mountains and deeper valleys.")]
+    [Range(10, 100f)]
+    public float heightMultiplier = 15f;
 
-    [Tooltip("Scale of the Perlin noise used for terrain generation.")]
+    [Tooltip("Controls the 'zoom' level of the Perlin noise. Smaller values create more gradual terrain variation, while larger values create sharper terrain features.")]
     public float noiseScale = 0.005f;
 
-    [Tooltip("Number of noise layers (octaves) for fractal noise.")]
-    public int octaves = 4;
+    [Tooltip("The number of noise layers used to add detail to the terrain. More octaves add more fine details but can increase computation time.")]
+    public int octaves = 6;
 
-    [Tooltip("Controls amplitude of each octave.")]
-    [Range(0f, 1f)]
-    public float persistence = 0.5f;
+    [Tooltip("Determines how much the amplitude decreases for each successive octave. A lower value means less variation in higher octaves, resulting in smoother terrain.")]
+    [Range(0f, 0.1f)]
+    public float persistence = 0.1f;
 
-    [Tooltip("Controls frequency of each octave.")]
-    public float lacunarity = 2f;
+    [Tooltip("Determines how much the frequency increases for each successive octave. Higher values result in more frequent variations, creating rougher terrain.")]
+    public float lacunarity = 5f;
 
     [Header("Visual Settings")]
-    [Tooltip("Material to apply to the voxels.")]
+    [Tooltip("The material applied to voxel blocks to define their appearance. This could include textures, colors, or shader properties.")]
     public Material voxelMaterial;
 
     // Dictionary to keep track of generated chunks using their coordinates as keys.
     private Dictionary<Vector2Int, GameObject> chunkDictionary = new Dictionary<Vector2Int, GameObject>();
-    
+
     // Workaround for preventing issues with rendering
     private float baseHeight = 20f;
 
