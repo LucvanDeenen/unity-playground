@@ -24,11 +24,11 @@ public class VoxelTerrain : MonoBehaviour
     [Tooltip("Seed for randomizing the noise.")]
     public int seed = 42;
 
+    [Tooltip("Height multiplier to scale the terrain height.")]
+    public float heightMultiplier = 6f;
+
     [Tooltip("Scale of the Perlin noise used for terrain generation.")]
     public float noiseScale = 0.005f;
-
-    [Tooltip("Height multiplier to scale the terrain height.")]
-    public float heightMultiplier = 10f;
 
     [Tooltip("Number of noise layers (octaves) for fractal noise.")]
     public int octaves = 4;
