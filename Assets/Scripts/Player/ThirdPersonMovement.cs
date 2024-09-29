@@ -9,8 +9,8 @@ public class ThirdPersonMovement : MonoBehaviour
     public Transform cam;
     public float speed = 6f;
     public float turnSmoothTime = 0.1f;
-    public float leanSmoothTime = 0.1f; // Time to smoothly lean
-    public float maxLeanAngle = 15f; // Max lean angle for leaning left/right
+    public float leanSmoothTime = 0.1f;
+    public float maxLeanAngle = 15f;
 
     private float turnSmoothVelocity;
     private float currentLeanAngle = 0f;
