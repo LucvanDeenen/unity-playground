@@ -10,6 +10,7 @@ public class ThirdPersonMovement : MonoBehaviour
     public float speed = 6f;
     public float turnSmoothTime = 0.1f;
     public float leanSmoothTime = 0.1f; // Time to smoothly lean
+    public float maxLeanAngle = 15f; // Max lean angle for leaning left/right
 
     private float turnSmoothVelocity;
     private float currentLeanAngle = 0f;
@@ -25,9 +26,10 @@ public class ThirdPersonMovement : MonoBehaviour
 
     void Update()
     {
-        // Get player input
+        // Get player input for movement and mouse
         float horizontal = Input.GetAxisRaw("Horizontal");
         float vertical = Input.GetAxisRaw("Vertical");
+        float mouseX = Input.GetAxis("Mouse X"); // Mouse movement on X-axis
 
         // Create movement direction vector
         Vector3 direction = new Vector3(horizontal, 0f, vertical).normalized;
@@ -36,34 +38,41 @@ public class ThirdPersonMovement : MonoBehaviour
         float movementSpeed = direction.magnitude * speed;
         animator.SetFloat("speed", movementSpeed);
 
-        // Determine target lean angle based on input
-        float targetLeanAngle;
+        // Determine target lean angle based on input and mouse movement
+        float targetLeanAngle = 0f;
+
         if (direction.magnitude >= 0.1f)
         {
-            if (vertical > 0f && horizontal > 0f)
+            // Calculate lean based on input (WASD) - lean left or right based on direction
+            if (vertical > 0f && horizontal > 0f) // Forward-right (W+D)
             {
-                targetLeanAngle = -15f;
+                targetLeanAngle = Mathf.Lerp(0f, -maxLeanAngle, Mathf.Abs(horizontal));
             }
-            else if (vertical > 0f && horizontal < 0f)
+            else if (vertical > 0f && horizontal < 0f) // Forward-left (W+A)
             {
-                targetLeanAngle = 15f;
+                targetLeanAngle = Mathf.Lerp(0f, maxLeanAngle, Mathf.Abs(horizontal));
             }
-            else if (vertical < 0f && horizontal < 0f)
+            else if (vertical < 0f && horizontal < 0f) // Backward-left (S+A)
             {
-                targetLeanAngle = 15f;
+                targetLeanAngle = Mathf.Lerp(0f, maxLeanAngle, Mathf.Abs(horizontal));
             }
-            else if (vertical < 0f && horizontal > 0f)
+            else if (vertical < 0f && horizontal > 0f) // Backward-right (S+D)
             {
-                targetLeanAngle = -15f;
+                targetLeanAngle = Mathf.Lerp(0f, -maxLeanAngle, Mathf.Abs(horizontal));
             }
-            else
+
+            // Modify lean based on the mouse movement (camera direction)
+            float mouseInfluence = Mathf.Lerp(0f, maxLeanAngle, Mathf.Abs(mouseX) / 5f);
+            if (mouseX > 0f)
             {
-                targetLeanAngle = 0f;
+                // Mouse moving right, lean right
+                targetLeanAngle -= mouseInfluence;
             }
-        }
-        else
-        {
-            targetLeanAngle = 0f;
+            else if (mouseX < 0f)
+            {
+                // Mouse moving left, lean left
+                targetLeanAngle += mouseInfluence;
+            }
         }
 
         // Smoothly interpolate current lean angle towards target lean angle
