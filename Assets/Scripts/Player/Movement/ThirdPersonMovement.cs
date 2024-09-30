@@ -5,14 +5,23 @@ public class ThirdPersonMovement : MonoBehaviour
     public CharacterController controller;
     public Animator animator;
     public Transform cam;
-    public float speed = 6f;
+    public float speed = 12f;
     public float turnSmoothTime = 0.1f;
     public float leanSmoothTime = 0.1f;
     public float maxLeanAngle = 15f;
-
     private float turnSmoothVelocity;
     private float currentLeanAngle = 0f;
     private float leanSmoothVelocity;
+
+    public Transform groundCheck;
+    public float groundDistance = 0.4f;
+    public bool isGrounded;
+    public LayerMask groundMask;
+
+    private float jumpHeight = 3f;
+    private float gravity = -9.81f;
+    private Vector3 velocity;
+
 
     void Start()
     {
@@ -25,7 +34,14 @@ public class ThirdPersonMovement : MonoBehaviour
         // Get player input for movement and mouse
         float horizontal = Input.GetAxisRaw("Horizontal");
         float vertical = Input.GetAxisRaw("Vertical");
-        float mouseX = Input.GetAxis("Mouse X"); // Mouse movement on X-axis
+        float mouseX = Input.GetAxis("Mouse X");
+
+        isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
+
+        if (isGrounded && velocity.y < 0) 
+        {
+            velocity.y = -2f;
+        }
 
         // Create movement direction vector
         Vector3 direction = new Vector3(horizontal, 0f, vertical).normalized;
@@ -88,6 +104,15 @@ public class ThirdPersonMovement : MonoBehaviour
             Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
             controller.Move(moveDir.normalized * speed * Time.deltaTime);
         }
+        
+        if (Input.GetButtonDown("Jump") && isGrounded) 
+        {
+            velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+        }
+
+        // Apply gravity
+        velocity.y += gravity * Time.deltaTime * 2f;
+        controller.Move(velocity * Time.deltaTime);
 
         // Apply rotation with lean angle (rotation around z-axis for lean)
         transform.rotation = Quaternion.Euler(0f, angle, currentLeanAngle);
