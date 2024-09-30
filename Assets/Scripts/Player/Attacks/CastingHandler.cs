@@ -4,7 +4,6 @@ public class CastingHandler : MonoBehaviour
 {
     public GameObject fireballPrefab; // Assign the Fireball prefab
     public Transform firePoint; // Assign the FirePoint transform
-    public float fireballSpeed = 20f; // Speed of the fireball
     public float fireRate = 1f; // Time between shots
     public Animator animator; // Reference to the Animator
 
@@ -29,7 +28,7 @@ public class CastingHandler : MonoBehaviour
         Rigidbody rb = fireball.GetComponent<Rigidbody>();
 
         // Set the velocity of the fireball
-        rb.velocity = firePoint.forward * fireballSpeed;
+        rb.velocity = firePoint.forward * Time.deltaTime;
 
         // Trigger the attack animation
         animator.SetTrigger("AttackTrigger");

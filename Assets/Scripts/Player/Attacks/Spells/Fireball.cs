@@ -2,9 +2,10 @@ using UnityEngine;
 
 public class Fireball : MonoBehaviour
 {
-    public float speed = 10f; // Speed of the fireball
-    public float lifeTime = 5f; // Time before the fireball is automatically destroyed if no collision
+    public float speed = 35f; // Speed of the fireball
+    public float lifeTime = 5f; // Time before the fireball is destroyed
     public GameObject explosionEffect; // Optional explosion effect prefab
+    public Light fireballLight; // Light component on the fireball
 
     private Rigidbody rb;
 
