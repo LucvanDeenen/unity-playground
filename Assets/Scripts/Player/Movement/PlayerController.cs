@@ -7,7 +7,7 @@ public class PlayerController : MonoBehaviour
 
     [Header("Animations")]
     [SerializeField] private Animator animator;
-    
+
     [Header("Movement")]
     [SerializeField] private CharacterController characterController;
     [SerializeField] private Transform groundCheck;

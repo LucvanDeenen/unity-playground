@@ -21,12 +21,12 @@ public class MovementHandler
         CharacterController characterController,
         Transform groundCheck,
         Transform playerTransform,
-        float speed = 12f,
+        float speed = 6f,
         float jumpHeight = 3f,
-        float gravity = -9.81f,
+        float gravity = -18f,
         float groundDistance = 0.4f,
         LayerMask groundMask = default,
-        float turnSmoothTime = 0.1f
+        float turnSmoothTime = 0.15f
     )
     {
         _controller = characterController;
@@ -48,7 +48,7 @@ public class MovementHandler
 
         HandleRotation(direction, cameraTransform);
 
-        HandleMovement(direction);
+        HandleMovement(direction, cameraTransform);
 
         HandleJump(jumpPressed);
 
@@ -76,11 +76,14 @@ public class MovementHandler
         }
     }
 
-    private void HandleMovement(Vector3 direction)
+    private void HandleMovement(Vector3 direction, Transform cameraTransform)
     {
         if (direction.magnitude >= 0.1f)
         {
-            Vector3 moveDir = Quaternion.Euler(0f, _transform.eulerAngles.y, 0f) * Vector3.forward;
+            float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cameraTransform.eulerAngles.y;
+            Quaternion targetRotation = Quaternion.Euler(0f, targetAngle, 0f);
+
+            Vector3 moveDir = targetRotation * Vector3.forward;
             _controller.Move(moveDir.normalized * _speed * Time.fixedDeltaTime);
         }
     }
