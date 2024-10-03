@@ -3,7 +3,7 @@ using UnityEngine;
 public class MovementHandler
 {
     private CharacterController _controller;
-    private Transform _transform;
+    private Transform _meshTransform;
     private Transform _groundCheck;
     private float _speed;
     private float _jumpHeight;
@@ -17,21 +17,11 @@ public class MovementHandler
 
     private float _turnSmoothVelocity;
 
-    public MovementHandler(
-        CharacterController characterController,
-        Transform groundCheck,
-        Transform playerTransform,
-        float speed = 6f,
-        float jumpHeight = 3f,
-        float gravity = -18f,
-        float groundDistance = 0.4f,
-        LayerMask groundMask = default,
-        float turnSmoothTime = 0.15f
-    )
+    public MovementHandler(CharacterController characterController, Transform groundCheck, Transform meshTransform, float speed = 12f, float jumpHeight = 3f, float gravity = -9.81f, float groundDistance = 0.4f, LayerMask groundMask = default, float turnSmoothTime = 0.1f)
     {
         _controller = characterController;
         _groundCheck = groundCheck;
-        _transform = playerTransform;
+        _meshTransform = meshTransform;
         _speed = speed;
         _jumpHeight = jumpHeight;
         _gravity = gravity;
@@ -41,6 +31,7 @@ public class MovementHandler
     }
 
     public float Speed => _speed;
+    public bool IsGrounded => _isGrounded;
 
     public void FixedUpdateMovement(Vector3 direction, bool jumpPressed, Transform cameraTransform)
     {
@@ -71,8 +62,8 @@ public class MovementHandler
         if (direction.magnitude >= 0.1f)
         {
             float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cameraTransform.eulerAngles.y;
-            float angle = Mathf.SmoothDampAngle(_transform.eulerAngles.y, targetAngle, ref _turnSmoothVelocity, _turnSmoothTime);
-            _transform.rotation = Quaternion.Euler(0f, angle, 0f);
+            float angle = Mathf.SmoothDampAngle(_meshTransform.eulerAngles.y, targetAngle, ref _turnSmoothVelocity, _turnSmoothTime);
+            _meshTransform.rotation = Quaternion.Euler(0f, angle, _meshTransform.eulerAngles.z);
         }
     }
 
@@ -82,7 +73,6 @@ public class MovementHandler
         {
             float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cameraTransform.eulerAngles.y;
             Quaternion targetRotation = Quaternion.Euler(0f, targetAngle, 0f);
-
             Vector3 moveDir = targetRotation * Vector3.forward;
             _controller.Move(moveDir.normalized * _speed * Time.fixedDeltaTime);
         }
@@ -100,6 +90,4 @@ public class MovementHandler
     {
         _velocity.y += _gravity * Time.fixedDeltaTime * 2f;
     }
-
-    public bool IsGrounded => _isGrounded;
 }

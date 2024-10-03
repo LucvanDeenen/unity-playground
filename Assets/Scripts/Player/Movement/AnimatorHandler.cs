@@ -14,6 +14,8 @@ public class AnimatorHandler
 
     public void UpdateAnimator(float movementSpeed, bool isJumping)
     {
+        if (_animator == null) return;
+
         _animator.SetFloat(_speedHash, movementSpeed);
         _animator.SetBool(_isJumpingHash, isJumping);
     }

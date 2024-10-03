@@ -2,15 +2,17 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    [Header("Camera")]
+    [Header("Components")]
     [SerializeField] private Transform cameraTransform;
+    [SerializeField] private Transform meshTransform;
+    [SerializeField] private Transform defaultCharacterTransform;
+    [SerializeField] private Transform groundCheck;
+    [SerializeField] private CharacterController characterController;
 
     [Header("Animations")]
     [SerializeField] private Animator animator;
 
-    [Header("Movement")]
-    [SerializeField] private CharacterController characterController;
-    [SerializeField] private Transform groundCheck;
+    [Header("Masks")]
     [SerializeField] private LayerMask groundMask;
 
     private IInputHandler _inputHandler;
@@ -25,10 +27,35 @@ public class PlayerController : MonoBehaviour
         _inputHandler = new InputHandler();
         _leanHandler = new LeanHandler();
 
+        if (meshTransform == null)
+        {
+            meshTransform = transform.Find("Mesh");
+        }
+
+        if (meshTransform != null)
+        {
+            if (characterController == null)
+                characterController = meshTransform.GetComponent<CharacterController>();
+            if (groundCheck == null)
+                groundCheck = meshTransform.Find("GroundCheck");
+        }
+
+        if (defaultCharacterTransform == null && meshTransform != null)
+        {
+            defaultCharacterTransform = meshTransform.Find("DefaultCharacter");
+        }
+
+        if (defaultCharacterTransform != null)
+        {
+            if (animator == null)
+                animator = defaultCharacterTransform.GetComponent<Animator>();
+        }
+
         _movementHandler = new MovementHandler(
             characterController,
             groundCheck,
-            transform,
+            meshTransform,
+            speed: 12f,
             groundMask: groundMask
         );
 
@@ -52,7 +79,10 @@ public class PlayerController : MonoBehaviour
         _currentLeanAngle = _leanHandler.CalculateLeanAngle(_inputHandler.Horizontal, _inputHandler.Vertical, _inputHandler.MouseX);
 
         // Apply lean rotation
-        transform.rotation = Quaternion.Euler(0f, transform.eulerAngles.y, _currentLeanAngle);
+        if (meshTransform != null)
+        {
+            meshTransform.rotation = Quaternion.Euler(0f, meshTransform.eulerAngles.y, _currentLeanAngle);
+        }
     }
 
     void FixedUpdate()
