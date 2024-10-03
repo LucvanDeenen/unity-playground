@@ -1,29 +1,39 @@
 using UnityEngine;
 
-[RequireComponent(typeof(MovementHandler), typeof(AnimatorHandler))]
 public class PlayerController : MonoBehaviour
 {
-    public Transform CameraTransform;
-    public float TurnSmoothTime = 0.1f;
-    public float MaxLeanAngle = 15f;
-    public float LeanSmoothTime = 0.1f;
+    [Header("Camera")]
+    [SerializeField] private Transform cameraTransform;
 
-    private InputHandler _inputHandler;
+    [Header("Animations")]
+    [SerializeField] private Animator animator;
+    
+    [Header("Movement")]
+    [SerializeField] private CharacterController characterController;
+    [SerializeField] private Transform groundCheck;
+    [SerializeField] private LayerMask groundMask;
+
+    private IInputHandler _inputHandler;
     private MovementHandler _movementHandler;
     private AnimatorHandler _animatorHandler;
     private LeanHandler _leanHandler;
 
-    private float _turnSmoothVelocity;
+    private float _currentLeanAngle = 0f;
 
     void Start()
     {
-        // Initialize handlers
         _inputHandler = new InputHandler();
-        _movementHandler = GetComponent<MovementHandler>();
-        _animatorHandler = GetComponent<AnimatorHandler>();
-        _leanHandler = new LeanHandler(MaxLeanAngle, LeanSmoothTime);
+        _leanHandler = new LeanHandler();
 
-        // Lock cursor
+        _movementHandler = new MovementHandler(
+            characterController,
+            groundCheck,
+            transform,
+            groundMask: groundMask
+        );
+
+        _animatorHandler = new AnimatorHandler(animator);
+
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
@@ -35,28 +45,21 @@ public class PlayerController : MonoBehaviour
         Vector3 direction = new Vector3(_inputHandler.Horizontal, 0f, _inputHandler.Vertical).normalized;
         float movementSpeed = direction.magnitude * _movementHandler.Speed;
 
-        // Update animator
-        _animatorHandler.UpdateAnimator(movementSpeed);
+        // Update animator with movement speed and jumping state
+        _animatorHandler.UpdateAnimator(movementSpeed, !_movementHandler.IsGrounded);
 
         // Calculate lean angle
-        float currentLeanAngle = _leanHandler.CalculateLeanAngle(_inputHandler.Horizontal, _inputHandler.Vertical, _inputHandler.MouseX);
+        _currentLeanAngle = _leanHandler.CalculateLeanAngle(_inputHandler.Horizontal, _inputHandler.Vertical, _inputHandler.MouseX);
 
-        // Handle rotation
-        float angle = transform.eulerAngles.y;
-        if (direction.magnitude >= 0.1f)
-        {
-            float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + CameraTransform.eulerAngles.y;
-            angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref _turnSmoothVelocity, TurnSmoothTime);
+        // Apply lean rotation
+        transform.rotation = Quaternion.Euler(0f, transform.eulerAngles.y, _currentLeanAngle);
+    }
 
-            Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
-            _movementHandler.Move(moveDir.normalized, _inputHandler.JumpPressed);
-        }
-        else
-        {
-            _movementHandler.Move(Vector3.zero, _inputHandler.JumpPressed);
-        }
+    void FixedUpdate()
+    {
+        Vector3 direction = new Vector3(_inputHandler.Horizontal, 0f, _inputHandler.Vertical).normalized;
 
-        // Apply rotation with lean angle
-        transform.rotation = Quaternion.Euler(0f, angle, currentLeanAngle);
+        // Handle movement and rotation in FixedUpdate
+        _movementHandler.FixedUpdateMovement(direction, _inputHandler.JumpPressed, cameraTransform);
     }
 }

@@ -1,6 +1,16 @@
 using UnityEngine;
 
-public class InputHandler
+public interface IInputHandler
+{
+    float Horizontal { get; }
+    float Vertical { get; }
+    float MouseX { get; }
+    bool JumpPressed { get; }
+
+    void UpdateInput();
+}
+
+public class InputHandler : IInputHandler
 {
     public float Horizontal { get; private set; }
     public float Vertical { get; private set; }

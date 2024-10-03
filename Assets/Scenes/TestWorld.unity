@@ -404,9 +404,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 783759829}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: GroundCheck
-  m_TagString: Untagged
+  m_TagString: Checkers
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -420,7 +420,7 @@ Transform:
   m_GameObject: {fileID: 783759828}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.05000019, z: 0}
+  m_LocalPosition: {x: 0, y: -0.073, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -539,22 +539,6 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 8412741090196231344, guid: 214a29bdd397f334b9bd3e8df3a134b9, type: 3}
   m_PrefabInstance: {fileID: 5467653162863110901}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1166064211
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1166064208}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6edbb60cc175dc498d8eab68a6cd5a0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  CameraTransform: {fileID: 0}
-  TurnSmoothTime: 0.1
-  MaxLeanAngle: 15
-  LeanSmoothTime: 0.1
 --- !u!114 &1166064212
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -581,58 +565,29 @@ MonoBehaviour:
   m_GameObject: {fileID: 1166064208}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a66adf2c0fb701b4d91da33907bc86da, type: 3}
+  m_Script: {fileID: 11500000, guid: f6edbb60cc175dc498d8eab68a6cd5a0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Animator: {fileID: 74047611}
---- !u!114 &1166064214
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1166064208}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1efe1ee551094a34981b4e658dec7ba4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Speed: 12
-  JumpHeight: 3
-  Gravity: -9.81
-  GroundCheck: {fileID: 783759829}
-  GroundDistance: 0.4
-  GroundMask:
+  cameraTransform: {fileID: 1683644473}
+  animator: {fileID: 74047611}
+  characterController: {fileID: 2080084716}
+  groundCheck: {fileID: 783759829}
+  groundMask:
     serializedVersion: 2
     m_Bits: 64
---- !u!143 &1166064215
-CharacterController:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
+--- !u!4 &1683644473 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7592847232671578200, guid: 214a29bdd397f334b9bd3e8df3a134b9, type: 3}
+  m_PrefabInstance: {fileID: 5467653162863110901}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1166064208}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Height: 2
-  m_Radius: 0.5
-  m_SlopeLimit: 45
-  m_StepOffset: 0.3
-  m_SkinWidth: 0.08
-  m_MinMoveDistance: 0.001
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!4 &2080084714 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3543069883830038225, guid: 214a29bdd397f334b9bd3e8df3a134b9, type: 3}
+  m_PrefabInstance: {fileID: 5467653162863110901}
+  m_PrefabAsset: {fileID: 0}
+--- !u!143 &2080084716 stripped
+CharacterController:
+  m_CorrespondingSourceObject: {fileID: 1676208532872089034, guid: 214a29bdd397f334b9bd3e8df3a134b9, type: 3}
   m_PrefabInstance: {fileID: 5467653162863110901}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &5467653162863110901
@@ -785,15 +740,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 8412741090196231344, guid: 214a29bdd397f334b9bd3e8df3a134b9, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1166064212}
-    - targetCorrespondingSourceObject: {fileID: 8412741090196231344, guid: 214a29bdd397f334b9bd3e8df3a134b9, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1166064211}
-    - targetCorrespondingSourceObject: {fileID: 8412741090196231344, guid: 214a29bdd397f334b9bd3e8df3a134b9, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1166064215}
-    - targetCorrespondingSourceObject: {fileID: 8412741090196231344, guid: 214a29bdd397f334b9bd3e8df3a134b9, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1166064214}
     - targetCorrespondingSourceObject: {fileID: 8412741090196231344, guid: 214a29bdd397f334b9bd3e8df3a134b9, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1166064213}

@@ -7,7 +7,7 @@ public class LeanHandler
     private float _maxLeanAngle;
     private float _leanSmoothTime;
 
-    public LeanHandler(float maxLeanAngle, float leanSmoothTime)
+    public LeanHandler(float maxLeanAngle = 15f, float leanSmoothTime = 0.1f)
     {
         _maxLeanAngle = maxLeanAngle;
         _leanSmoothTime = leanSmoothTime;
@@ -17,21 +17,25 @@ public class LeanHandler
     {
         float targetLeanAngle = 0f;
 
-        if (new Vector2(horizontal, vertical).magnitude >= 0.1f)
+        Vector2 inputDirection = new Vector2(horizontal, vertical);
+        if (inputDirection.magnitude >= 0.1f)
         {
-            // Direction-based leaning
-            if (vertical > 0f && horizontal > 0f) // Forward-right
-                targetLeanAngle = Mathf.Lerp(0f, -_maxLeanAngle, Mathf.Abs(horizontal));
-            else if (vertical > 0f && horizontal < 0f) // Forward-left
-                targetLeanAngle = Mathf.Lerp(0f, _maxLeanAngle, Mathf.Abs(horizontal));
-            else if (vertical < 0f && horizontal < 0f) // Backward-left
-                targetLeanAngle = Mathf.Lerp(0f, _maxLeanAngle, Mathf.Abs(horizontal));
-            else if (vertical < 0f && horizontal > 0f) // Backward-right
-                targetLeanAngle = Mathf.Lerp(0f, -_maxLeanAngle, Mathf.Abs(horizontal));
+            // Calculate the angle of movement input
+            float inputAngle = Mathf.Atan2(horizontal, vertical) * Mathf.Rad2Deg;
 
-            // Mouse-based leaning
-            float mouseInfluence = Mathf.Lerp(0f, _maxLeanAngle, Mathf.Abs(mouseX) / 5f);
-            targetLeanAngle += mouseX > 0f ? -mouseInfluence : mouseInfluence;
+            // Determine lean direction based on input angle
+            if ((inputAngle >= 45f && inputAngle <= 135f) || (inputAngle <= -225f && inputAngle >= -315f)) // Right
+            {
+                targetLeanAngle = -_maxLeanAngle;
+            }
+            else if ((inputAngle <= -45f && inputAngle >= -135f) || (inputAngle >= 225f && inputAngle <= 315f)) // Left
+            {
+                targetLeanAngle = _maxLeanAngle;
+            }
+
+            // Apply mouse influence
+            float mouseInfluence = Mathf.Clamp(mouseX / 5f, -1f, 1f) * _maxLeanAngle;
+            targetLeanAngle += mouseInfluence;
         }
 
         // Smoothly interpolate current lean angle towards target lean angle

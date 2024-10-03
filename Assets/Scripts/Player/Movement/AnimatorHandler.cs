@@ -1,11 +1,22 @@
 using UnityEngine;
 
-public class AnimatorHandler : MonoBehaviour
+public class AnimatorHandler
 {
-    public Animator Animator;
+    private Animator _animator;
 
-    public void UpdateAnimator(float movementSpeed)
+    private readonly int _speedHash = Animator.StringToHash("speed");
+    private readonly int _isJumpingHash = Animator.StringToHash("isJumping");
+
+    public AnimatorHandler(Animator animator)
     {
-        Animator.SetFloat("speed", movementSpeed);
+        _animator = animator;
+    }
+
+    public void UpdateAnimator(float movementSpeed, bool isJumping)
+    {
+        _animator.SetFloat(_speedHash, movementSpeed);
+
+        // Update isJumping parameter
+        _animator.SetBool(_isJumpingHash, isJumping);
     }
 }

@@ -1,56 +1,102 @@
 using UnityEngine;
 
-[RequireComponent(typeof(CharacterController))]
-public class MovementHandler : MonoBehaviour
+public class MovementHandler
 {
-    public float Speed = 12f;
-    public float JumpHeight = 3f;
-    public float Gravity = -9.81f;
-
     private CharacterController _controller;
+    private Transform _transform;
+    private Transform _groundCheck;
+    private float _speed;
+    private float _jumpHeight;
+    private float _gravity;
+    private float _groundDistance;
+    private LayerMask _groundMask;
+    private float _turnSmoothTime;
+
     private Vector3 _velocity;
     private bool _isGrounded;
 
-    public Transform GroundCheck;
-    public float GroundDistance = 0.4f;
-    public LayerMask GroundMask;
+    private float _turnSmoothVelocity;
 
-    void Start()
+    public MovementHandler(
+        CharacterController characterController,
+        Transform groundCheck,
+        Transform playerTransform,
+        float speed = 12f,
+        float jumpHeight = 3f,
+        float gravity = -9.81f,
+        float groundDistance = 0.4f,
+        LayerMask groundMask = default,
+        float turnSmoothTime = 0.1f
+    )
     {
-        _controller = GetComponent<CharacterController>();
+        _controller = characterController;
+        _groundCheck = groundCheck;
+        _transform = playerTransform;
+        _speed = speed;
+        _jumpHeight = jumpHeight;
+        _gravity = gravity;
+        _groundDistance = groundDistance;
+        _groundMask = groundMask;
+        _turnSmoothTime = turnSmoothTime;
     }
 
-    public void Move(Vector3 moveDirection, bool jumpPressed)
+    public float Speed => _speed;
+
+    public void FixedUpdateMovement(Vector3 direction, bool jumpPressed, Transform cameraTransform)
     {
         GroundCheckLogic();
 
-        _controller.Move(moveDirection * Speed * Time.deltaTime);
+        HandleRotation(direction, cameraTransform);
 
-        if (jumpPressed && _isGrounded)
-        {
-            _velocity.y = Mathf.Sqrt(JumpHeight * -2f * Gravity);
-        }
+        HandleMovement(direction);
+
+        HandleJump(jumpPressed);
 
         ApplyGravity();
-        _controller.Move(_velocity * Time.deltaTime);
+
+        _controller.Move(_velocity * Time.fixedDeltaTime);
     }
 
     private void GroundCheckLogic()
     {
-        _isGrounded = Physics.CheckSphere(GroundCheck.position, GroundDistance, GroundMask);
+        _isGrounded = Physics.CheckSphere(_groundCheck.position, _groundDistance, _groundMask);
         if (_isGrounded && _velocity.y < 0)
         {
             _velocity.y = -2f;
         }
     }
 
-    private void ApplyGravity()
+    private void HandleRotation(Vector3 direction, Transform cameraTransform)
     {
-        _velocity.y += Gravity * Time.deltaTime * 2f;
+        if (direction.magnitude >= 0.1f)
+        {
+            float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cameraTransform.eulerAngles.y;
+            float angle = Mathf.SmoothDampAngle(_transform.eulerAngles.y, targetAngle, ref _turnSmoothVelocity, _turnSmoothTime);
+            _transform.rotation = Quaternion.Euler(0f, angle, 0f);
+        }
     }
 
-    public bool IsGrounded()
+    private void HandleMovement(Vector3 direction)
     {
-        return _isGrounded;
+        if (direction.magnitude >= 0.1f)
+        {
+            Vector3 moveDir = Quaternion.Euler(0f, _transform.eulerAngles.y, 0f) * Vector3.forward;
+            _controller.Move(moveDir.normalized * _speed * Time.fixedDeltaTime);
+        }
     }
+
+    private void HandleJump(bool jumpPressed)
+    {
+        if (jumpPressed && _isGrounded)
+        {
+            _velocity.y = Mathf.Sqrt(_jumpHeight * -2f * _gravity);
+        }
+    }
+
+    private void ApplyGravity()
+    {
+        _velocity.y += _gravity * Time.fixedDeltaTime * 2f;
+    }
+
+    public bool IsGrounded => _isGrounded;
 }
