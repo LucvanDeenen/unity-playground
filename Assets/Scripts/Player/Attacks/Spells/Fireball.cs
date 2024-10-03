@@ -15,7 +15,7 @@ public class Fireball : MonoBehaviour
         rb = GetComponent<Rigidbody>();
 
         // Set the velocity of the fireball in the forward direction
-        rb.velocity = transform.forward * speed;
+        rb.linearVelocity = transform.forward * speed;
 
         // Automatically destroy the fireball after a certain time
         Destroy(gameObject, lifeTime);

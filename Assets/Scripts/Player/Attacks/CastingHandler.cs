@@ -28,7 +28,7 @@ public class CastingHandler : MonoBehaviour
         Rigidbody rb = fireball.GetComponent<Rigidbody>();
 
         // Set the velocity of the fireball
-        rb.velocity = firePoint.forward * Time.deltaTime;
+        rb.linearVelocity = firePoint.forward * Time.deltaTime;
 
         // Trigger the attack animation
         animator.SetTrigger("AttackTrigger");
