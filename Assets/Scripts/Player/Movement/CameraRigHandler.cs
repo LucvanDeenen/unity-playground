@@ -10,16 +10,15 @@ public enum CameraSide
 public class CameraRigHandler : MonoBehaviour
 {
     [Header("Settings")]
-    public Vector3 aimingOffset = new Vector3(-2f, 1f, -2f);
-    public float transitionSpeed = 5f;
-    
+    [SerializeField] private Vector3 aimingOffset = new Vector3(2f, 1f, 2f);
+    [SerializeField] private CameraSide _cameraSide;
+
     [Header("Setup")]
-    public PlayerController _playerController;
-    public CinemachineFreeLook freeLookCamera;
+    [SerializeField] private PlayerController _playerController;
+    [SerializeField] private CinemachineFreeLook freeLookCamera;
 
     private CinemachineCameraOffset _cameraOffsetExtension;
     private Vector3 _originalOffset;
-    private CameraSide _cameraSide;
 
     void Start()
     {
@@ -52,6 +51,7 @@ public class CameraRigHandler : MonoBehaviour
 
         // Determine the target offset based on aiming state
         Vector3 targetOffset = _playerController.IsAiming ? aimingOffset : _originalOffset;
+        float transitionSpeed = 5f;
 
         // Smoothly interpolate to the target offset
         _cameraOffsetExtension.m_Offset = Vector3.Lerp(
@@ -59,6 +59,11 @@ public class CameraRigHandler : MonoBehaviour
             targetOffset,
             Time.deltaTime * transitionSpeed
         );
+    }
+
+    public void ToggleInventory()
+    {
+        // Handle implementation to rotate to face the player
     }
 
     public void ToggleView(CameraSide cameraSide)

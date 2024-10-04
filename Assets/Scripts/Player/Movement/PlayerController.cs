@@ -9,7 +9,7 @@ public class PlayerController : CharacterBehaviour
     private float _vertical;
     private float _mouseX;
     private bool _jumpPressed;
-    
+    private bool _isRunning;
     private bool _isAiming;
     public bool IsAiming => _isAiming;
 
@@ -29,16 +29,24 @@ public class PlayerController : CharacterBehaviour
         if (Input.GetKeyDown(KeyCode.E))
             rigHandler.ToggleView(CameraSide.Right);
 
-        // Calculate movement speed for animator
+        if (Input.GetKeyDown(KeyCode.I))
+            rigHandler.ToggleInventory();
+
+        if (Input.GetKey(KeyCode.LeftShift) && !_isAiming)
+            _isRunning = true;
+
+        if (Input.GetKeyUp(KeyCode.LeftShift) && !_isAiming)
+            _isRunning = false;
+
         Vector3 direction = new Vector3(_horizontal, 0f, _vertical).normalized;
         float movementSpeed = direction.magnitude * speed;
         if (_isAiming)
             movementSpeed *= 0.5f;
 
-        // Update animator with movement speed and jumping state
-        _animatorHandler.UpdateAnimator(movementSpeed, !_movementHandler.IsGrounded);
+        if (_isRunning)
+            movementSpeed *= 1.5f;
 
-        // Calculate & apply lean angle
+        _animatorHandler.UpdateAnimator(movementSpeed, !_movementHandler.IsGrounded);
         _leanHandler.CalculateLeanAngle(_horizontal, _vertical, _mouseX, _isAiming);
         meshTransform.rotation = Quaternion.Euler(0f, meshTransform.eulerAngles.y, _leanHandler.CurrentLeanAngle);
     }
@@ -49,6 +57,9 @@ public class PlayerController : CharacterBehaviour
         float currentSpeed = speed;
         if (_isAiming)
             currentSpeed *= 0.5f;
+
+        if (_isRunning)
+            currentSpeed *= 1.5f;
 
         _movementHandler.FixedUpdateMovement(direction, _jumpPressed, cameraTransform, _isAiming, currentSpeed);
         _jumpPressed = false;
