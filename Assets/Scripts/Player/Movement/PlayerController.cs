@@ -46,7 +46,6 @@ public class PlayerController : MonoBehaviour
         Cursor.visible = false;
     }
 
-    float _currentLeanAngle = 0f;
     void Update()
     {
         // Handle input
@@ -66,14 +65,9 @@ public class PlayerController : MonoBehaviour
         // Update animator with movement speed and jumping state
         _animatorHandler.UpdateAnimator(movementSpeed, !_movementHandler.IsGrounded);
 
-        // Calculate lean angle
-        _currentLeanAngle = _leanHandler.CalculateLeanAngle(_horizontal, _vertical, _mouseX);
-
-        // Apply lean rotation
-        if (meshTransform != null)
-        {
-            meshTransform.rotation = Quaternion.Euler(0f, meshTransform.eulerAngles.y, _currentLeanAngle);
-        }
+        // Calculate & apply lean angle
+        _leanHandler.CalculateLeanAngle(_horizontal, _vertical, _mouseX);
+        meshTransform.rotation = Quaternion.Euler(0f, meshTransform.eulerAngles.y, _leanHandler.CurrentLeanAngle);
     }
 
     void FixedUpdate()

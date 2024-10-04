@@ -13,7 +13,8 @@ public class LeanHandler
         _leanSmoothTime = leanSmoothTime;
     }
 
-    public float CalculateLeanAngle(float horizontal, float vertical, float mouseX)
+    public float CurrentLeanAngle => _currentLeanAngle;
+    public void CalculateLeanAngle(float horizontal, float vertical, float mouseX)
     {
         float targetLeanAngle = 0f;
 
@@ -40,7 +41,5 @@ public class LeanHandler
 
         // Smoothly interpolate current lean angle towards target lean angle
         _currentLeanAngle = Mathf.SmoothDamp(_currentLeanAngle, targetLeanAngle, ref _leanSmoothVelocity, _leanSmoothTime);
-
-        return _currentLeanAngle;
     }
 }
