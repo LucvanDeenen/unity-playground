@@ -2,27 +2,36 @@ using UnityEngine;
 
 public class PlayerController : CharacterBehaviour
 {
+    [Header("Camera")]
+    public CameraRigHandler rigHandler;
+
     private float _horizontal;
     private float _vertical;
     private float _mouseX;
     private bool _jumpPressed;
+    
     private bool _isAiming;
+    public bool IsAiming => _isAiming;
 
     void Update()
     {
-        // Handle input
         _horizontal = Input.GetAxisRaw("Horizontal");
         _vertical = Input.GetAxisRaw("Vertical");
         _mouseX = Input.GetAxis("Mouse X");
         _isAiming = Input.GetMouseButton(1);
+        
         if (Input.GetButtonDown("Jump"))
             _jumpPressed = true;
+
+        if (Input.GetKeyDown(KeyCode.Q)) 
+            rigHandler.ToggleView(CameraSide.Left);
+
+        if (Input.GetKeyDown(KeyCode.E))
+            rigHandler.ToggleView(CameraSide.Right);
 
         // Calculate movement speed for animator
         Vector3 direction = new Vector3(_horizontal, 0f, _vertical).normalized;
         float movementSpeed = direction.magnitude * speed;
-
-        // Halve movement speed when aiming
         if (_isAiming)
             movementSpeed *= 0.5f;
 
@@ -37,18 +46,11 @@ public class PlayerController : CharacterBehaviour
     void FixedUpdate()
     {
         Vector3 direction = new Vector3(_horizontal, 0f, _vertical).normalized;
-
-        // Adjust movement speed when aiming
         float currentSpeed = speed;
         if (_isAiming)
-        {
-            currentSpeed *= 0.5f; // Halve the movement speed when aiming
-        }
+            currentSpeed *= 0.5f;
 
-        // Handle movement and rotation in FixedUpdate
         _movementHandler.FixedUpdateMovement(direction, _jumpPressed, cameraTransform, _isAiming, currentSpeed);
-
-        // Reset jumpPressed after handling to prevent continuous jumping
         _jumpPressed = false;
     }
 }
