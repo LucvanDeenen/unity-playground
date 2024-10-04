@@ -1,50 +1,12 @@
 using UnityEngine;
 
-public class PlayerController : MonoBehaviour
+public class PlayerController : CharacterBehaviour
 {
-    [Header("Movement Settings")]
-    [SerializeField] private float speed = 8f;
-    [SerializeField] private float jumpHeight = 3f;
-    [SerializeField] private float gravity = -18f;
-
-    [Header("References")]
-    [SerializeField] private Transform cameraTransform;
-    [SerializeField] private Transform meshTransform;
-    [SerializeField] private Transform defaultCharacterTransform;
-    [SerializeField] private Transform groundCheck;
-
-    [Header("Animations")]
-    [SerializeField] private Animator animator;
-
-    [Header("Masks")]
-    [SerializeField] private LayerMask groundMask;
-
-    private MovementHandler _movementHandler;
-    private AnimatorHandler _animatorHandler;
-    private LeanHandler _leanHandler;
-
     private float _horizontal;
     private float _vertical;
     private float _mouseX;
     private bool _jumpPressed;
-
-
-    void Start()
-    {
-        _leanHandler = new LeanHandler();
-        _movementHandler = new MovementHandler(
-            groundCheck,
-            meshTransform,
-            speed: speed,
-            jumpHeight: jumpHeight,
-            gravity: gravity,
-            groundMask: groundMask
-        );
-        _animatorHandler = new AnimatorHandler(animator);
-
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
-    }
+    private bool _isAiming;
 
     void Update()
     {
@@ -52,11 +14,9 @@ public class PlayerController : MonoBehaviour
         _horizontal = Input.GetAxisRaw("Horizontal");
         _vertical = Input.GetAxisRaw("Vertical");
         _mouseX = Input.GetAxis("Mouse X");
-
+        _isAiming = Input.GetMouseButton(1);
         if (Input.GetButtonDown("Jump"))
-        {
             _jumpPressed = true;
-        }
 
         // Calculate movement speed for animator
         Vector3 direction = new Vector3(_horizontal, 0f, _vertical).normalized;
@@ -75,7 +35,7 @@ public class PlayerController : MonoBehaviour
         Vector3 direction = new Vector3(_horizontal, 0f, _vertical).normalized;
 
         // Handle movement and rotation in FixedUpdate
-        _movementHandler.FixedUpdateMovement(direction, _jumpPressed, cameraTransform);
+        _movementHandler.FixedUpdateMovement(direction, _jumpPressed, cameraTransform, _isAiming);
 
         // Reset jumpPressed after handling to prevent continuous jumping
         _jumpPressed = false;

@@ -33,18 +33,13 @@ public class MovementHandler
     public float Speed => _speed;
     public bool IsGrounded => _isGrounded;
 
-    public void FixedUpdateMovement(Vector3 direction, bool jumpPressed, Transform cameraTransform)
+    public void FixedUpdateMovement(Vector3 direction, bool jumpPressed, Transform cameraTransform, bool isAiming)
     {
         GroundCheckLogic();
-
-        HandleRotation(direction, cameraTransform);
-
+        HandleRotation(direction, cameraTransform, isAiming);
         HandleMovement(direction, cameraTransform);
-
         HandleJump(jumpPressed);
-
         ApplyGravity();
-
         _controller.Move(_velocity * Time.fixedDeltaTime);
     }
 
@@ -57,13 +52,19 @@ public class MovementHandler
         }
     }
 
-    private void HandleRotation(Vector3 direction, Transform cameraTransform)
+    private void HandleRotation(Vector3 direction, Transform cameraTransform, bool isAiming)
     {
-        if (direction.magnitude >= 0.1f)
+        if (isAiming)
+        {
+            float targetAngle = cameraTransform.eulerAngles.y;
+            float angle = Mathf.SmoothDampAngle(_meshTransform.eulerAngles.y, targetAngle, ref _turnSmoothVelocity, _turnSmoothTime);
+            _meshTransform.rotation = Quaternion.Euler(0f, angle, _meshTransform.eulerAngles.z);
+        }
+        else if (direction.magnitude >= 0.1f)
         {
             float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cameraTransform.eulerAngles.y;
             float angle = Mathf.SmoothDampAngle(_meshTransform.eulerAngles.y, targetAngle, ref _turnSmoothVelocity, _turnSmoothTime);
-            _meshTransform.rotation = Quaternion.Euler(0f, angle, _meshTransform.eulerAngles.z); // Keep the lean angle
+            _meshTransform.rotation = Quaternion.Euler(0f, angle, _meshTransform.eulerAngles.z);
         }
     }
 
