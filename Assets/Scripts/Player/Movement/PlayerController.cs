@@ -22,11 +22,15 @@ public class PlayerController : CharacterBehaviour
         Vector3 direction = new Vector3(_horizontal, 0f, _vertical).normalized;
         float movementSpeed = direction.magnitude * speed;
 
+        // Halve movement speed when aiming
+        if (_isAiming)
+            movementSpeed *= 0.5f;
+
         // Update animator with movement speed and jumping state
         _animatorHandler.UpdateAnimator(movementSpeed, !_movementHandler.IsGrounded);
 
         // Calculate & apply lean angle
-        _leanHandler.CalculateLeanAngle(_horizontal, _vertical, _mouseX);
+        _leanHandler.CalculateLeanAngle(_horizontal, _vertical, _mouseX, _isAiming);
         meshTransform.rotation = Quaternion.Euler(0f, meshTransform.eulerAngles.y, _leanHandler.CurrentLeanAngle);
     }
 
@@ -34,8 +38,15 @@ public class PlayerController : CharacterBehaviour
     {
         Vector3 direction = new Vector3(_horizontal, 0f, _vertical).normalized;
 
+        // Adjust movement speed when aiming
+        float currentSpeed = speed;
+        if (_isAiming)
+        {
+            currentSpeed *= 0.5f; // Halve the movement speed when aiming
+        }
+
         // Handle movement and rotation in FixedUpdate
-        _movementHandler.FixedUpdateMovement(direction, _jumpPressed, cameraTransform, _isAiming);
+        _movementHandler.FixedUpdateMovement(direction, _jumpPressed, cameraTransform, _isAiming, currentSpeed);
 
         // Reset jumpPressed after handling to prevent continuous jumping
         _jumpPressed = false;

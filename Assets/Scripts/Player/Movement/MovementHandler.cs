@@ -33,8 +33,9 @@ public class MovementHandler
     public float Speed => _speed;
     public bool IsGrounded => _isGrounded;
 
-    public void FixedUpdateMovement(Vector3 direction, bool jumpPressed, Transform cameraTransform, bool isAiming)
+    public void FixedUpdateMovement(Vector3 direction, bool jumpPressed, Transform cameraTransform, bool isAiming, float currentSpeed)
     {
+        _speed = currentSpeed; // Update the speed
         GroundCheckLogic();
         HandleRotation(direction, cameraTransform, isAiming);
         HandleMovement(direction, cameraTransform);

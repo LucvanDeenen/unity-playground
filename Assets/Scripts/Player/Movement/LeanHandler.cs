@@ -7,39 +7,41 @@ public class LeanHandler
     private float _maxLeanAngle;
     private float _leanSmoothTime;
 
+    public float CurrentLeanAngle => _currentLeanAngle;
+
     public LeanHandler(float maxLeanAngle = 15f, float leanSmoothTime = 0.1f)
     {
         _maxLeanAngle = maxLeanAngle;
         _leanSmoothTime = leanSmoothTime;
     }
 
-    public float CurrentLeanAngle => _currentLeanAngle;
-    public void CalculateLeanAngle(float horizontal, float vertical, float mouseX)
+    public void CalculateLeanAngle(float horizontal, float vertical, float mouseX, bool isAiming)
     {
         float targetLeanAngle = 0f;
 
-        Vector2 inputDirection = new Vector2(horizontal, vertical);
-        if (inputDirection.magnitude >= 0.1f)
+        if (isAiming)
         {
-            // Calculate the angle of movement input
-            float inputAngle = Mathf.Atan2(horizontal, vertical) * Mathf.Rad2Deg;
-
-            // Determine lean direction based on input angle
-            if ((inputAngle >= 45f && inputAngle <= 135f) || (inputAngle <= -225f && inputAngle >= -315f)) // Right
+            targetLeanAngle = 0f;
+        }
+        else
+        {
+            // Calculate target lean angle based on input
+            Vector2 inputDirection = new Vector2(horizontal, vertical);
+            if (inputDirection.magnitude >= 0.1f)
             {
-                targetLeanAngle = -_maxLeanAngle;
+                // Direction-based leaning
+                if (vertical > 0f && horizontal > 0f) // Forward-right
+                    targetLeanAngle = Mathf.Lerp(0f, -_maxLeanAngle, Mathf.Abs(horizontal));
+                else if (vertical > 0f && horizontal < 0f) // Forward-left
+                    targetLeanAngle = Mathf.Lerp(0f, _maxLeanAngle, Mathf.Abs(horizontal));
+                else if (vertical < 0f && horizontal < 0f) // Backward-left
+                    targetLeanAngle = Mathf.Lerp(0f, _maxLeanAngle, Mathf.Abs(horizontal));
+                else if (vertical < 0f && horizontal > 0f) // Backward-right
+                    targetLeanAngle = Mathf.Lerp(0f, -_maxLeanAngle, Mathf.Abs(horizontal));
             }
-            else if ((inputAngle <= -45f && inputAngle >= -135f) || (inputAngle >= 225f && inputAngle <= 315f)) // Left
-            {
-                targetLeanAngle = _maxLeanAngle;
-            }
-
-            // Apply mouse influence
-            float mouseInfluence = Mathf.Clamp(mouseX / 5f, -1f, 1f) * _maxLeanAngle;
-            targetLeanAngle += mouseInfluence;
         }
 
         // Smoothly interpolate current lean angle towards target lean angle
-        _currentLeanAngle = Mathf.SmoothDamp(_currentLeanAngle, targetLeanAngle, ref _leanSmoothVelocity, _leanSmoothTime);
+        _currentLeanAngle = Mathf.SmoothDampAngle(_currentLeanAngle, targetLeanAngle, ref _leanSmoothVelocity, _leanSmoothTime);
     }
 }
