@@ -87,7 +87,6 @@ public class MovementHandler
 
     private void HandleJump(bool jumpPressed)
     {
-        Debug.Log("test - " + jumpPressed);
         if (jumpPressed && _isGrounded)
         {
             _velocity.y = Mathf.Sqrt(_jumpHeight * -2f * _gravity);
