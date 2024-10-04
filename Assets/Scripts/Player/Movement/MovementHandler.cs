@@ -17,9 +17,8 @@ public class MovementHandler
 
     private float _turnSmoothVelocity;
 
-    public MovementHandler(CharacterController characterController, Transform groundCheck, Transform meshTransform, float speed = 12f, float jumpHeight = 3f, float gravity = -9.81f, float groundDistance = 0.4f, LayerMask groundMask = default, float turnSmoothTime = 0.1f)
+    public MovementHandler(Transform groundCheck, Transform meshTransform, float speed, float jumpHeight, float gravity, float groundDistance = 0.4f, LayerMask groundMask = default, float turnSmoothTime = 0.1f)
     {
-        _controller = characterController;
         _groundCheck = groundCheck;
         _meshTransform = meshTransform;
         _speed = speed;
@@ -28,6 +27,7 @@ public class MovementHandler
         _groundDistance = groundDistance;
         _groundMask = groundMask;
         _turnSmoothTime = turnSmoothTime;
+        _controller = meshTransform.GetComponent<CharacterController>();
     }
 
     public float Speed => _speed;
@@ -63,7 +63,7 @@ public class MovementHandler
         {
             float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cameraTransform.eulerAngles.y;
             float angle = Mathf.SmoothDampAngle(_meshTransform.eulerAngles.y, targetAngle, ref _turnSmoothVelocity, _turnSmoothTime);
-            _meshTransform.rotation = Quaternion.Euler(0f, angle, _meshTransform.eulerAngles.z);
+            _meshTransform.rotation = Quaternion.Euler(0f, angle, _meshTransform.eulerAngles.z); // Keep the lean angle
         }
     }
 
@@ -71,15 +71,23 @@ public class MovementHandler
     {
         if (direction.magnitude >= 0.1f)
         {
+            // Calculate the target angle based on input and camera direction
             float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cameraTransform.eulerAngles.y;
+
+            // Convert the angle to a quaternion
             Quaternion targetRotation = Quaternion.Euler(0f, targetAngle, 0f);
+
+            // Calculate the movement direction
             Vector3 moveDir = targetRotation * Vector3.forward;
+
+            // Move the character
             _controller.Move(moveDir.normalized * _speed * Time.fixedDeltaTime);
         }
     }
 
     private void HandleJump(bool jumpPressed)
     {
+        Debug.Log("test - " + jumpPressed);
         if (jumpPressed && _isGrounded)
         {
             _velocity.y = Mathf.Sqrt(_jumpHeight * -2f * _gravity);

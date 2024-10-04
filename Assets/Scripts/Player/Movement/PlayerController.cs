@@ -2,12 +2,16 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    [Header("Components")]
+    [Header("Movement Settings")]
+    [SerializeField] private float speed = 12f;
+    [SerializeField] private float jumpHeight = 3f;
+    [SerializeField] private float gravity = -9.81f;
+
+    [Header("References")]
     [SerializeField] private Transform cameraTransform;
     [SerializeField] private Transform meshTransform;
     [SerializeField] private Transform defaultCharacterTransform;
     [SerializeField] private Transform groundCheck;
-    [SerializeField] private CharacterController characterController;
 
     [Header("Animations")]
     [SerializeField] private Animator animator;
@@ -26,39 +30,14 @@ public class PlayerController : MonoBehaviour
     {
         _inputHandler = new InputHandler();
         _leanHandler = new LeanHandler();
-
-        if (meshTransform == null)
-        {
-            meshTransform = transform.Find("Mesh");
-        }
-
-        if (meshTransform != null)
-        {
-            if (characterController == null)
-                characterController = meshTransform.GetComponent<CharacterController>();
-            if (groundCheck == null)
-                groundCheck = meshTransform.Find("GroundCheck");
-        }
-
-        if (defaultCharacterTransform == null && meshTransform != null)
-        {
-            defaultCharacterTransform = meshTransform.Find("DefaultCharacter");
-        }
-
-        if (defaultCharacterTransform != null)
-        {
-            if (animator == null)
-                animator = defaultCharacterTransform.GetComponent<Animator>();
-        }
-
         _movementHandler = new MovementHandler(
-            characterController,
             groundCheck,
             meshTransform,
-            speed: 12f,
+            speed: speed,
+            jumpHeight: jumpHeight,
+            gravity: gravity,
             groundMask: groundMask
         );
-
         _animatorHandler = new AnimatorHandler(animator);
 
         Cursor.lockState = CursorLockMode.Locked;
@@ -88,8 +67,6 @@ public class PlayerController : MonoBehaviour
     void FixedUpdate()
     {
         Vector3 direction = new Vector3(_inputHandler.Horizontal, 0f, _inputHandler.Vertical).normalized;
-
-        // Handle movement and rotation in FixedUpdate
         _movementHandler.FixedUpdateMovement(direction, _inputHandler.JumpPressed, cameraTransform);
     }
 }
