@@ -5,13 +5,17 @@ public class PlayerController : CharacterBehaviour
     [Header("Camera")]
     public CameraRigHandler rigHandler;
 
+    [Header("References")]
+    public bool _isAiming { get; set; }
+    public bool IsAiming => _isAiming;
+    public bool _inventoryOpen { get; set; }
+    public bool InventoryOpen => _inventoryOpen;
+
     private float _horizontal;
     private float _vertical;
     private float _mouseX;
     private bool _jumpPressed;
     private bool _isRunning;
-    private bool _isAiming;
-    public bool IsAiming => _isAiming;
 
     void Update()
     {

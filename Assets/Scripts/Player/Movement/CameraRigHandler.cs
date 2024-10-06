@@ -50,7 +50,7 @@ public class CameraRigHandler : MonoBehaviour
             return;
 
         // Determine the target offset based on aiming state
-        Vector3 targetOffset = _playerController.IsAiming ? aimingOffset : _originalOffset;
+        Vector3 targetOffset = _playerController.IsAiming && !_playerController._inventoryOpen ? aimingOffset : _originalOffset;
         float transitionSpeed = 5f;
 
         // Smoothly interpolate to the target offset
@@ -63,6 +63,8 @@ public class CameraRigHandler : MonoBehaviour
 
     public void ToggleInventory()
     {
+        _playerController._isAiming = false;
+        _playerController._inventoryOpen = !_playerController._inventoryOpen;
         // Handle implementation to rotate to face the player
     }
 

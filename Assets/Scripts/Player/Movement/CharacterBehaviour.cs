@@ -7,7 +7,7 @@ public class CharacterBehaviour : MonoBehaviour
     [SerializeField] protected float jumpHeight = 3f;
     [SerializeField] protected float gravity = -18f;
 
-    [Header("References")]
+    [Header("Setup")]
     [SerializeField] protected Transform cameraTransform;
     [SerializeField] protected Transform meshTransform;
     [SerializeField] protected Transform defaultCharacterTransform;
