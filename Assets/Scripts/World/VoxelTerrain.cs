@@ -45,6 +45,16 @@ public class VoxelTerrain : MonoBehaviour
     [Tooltip("The material applied to voxel blocks to define their appearance. This could include textures, colors, or shader properties.")]
     [SerializeField] private Material voxelMaterial;
 
+    [Header("Spawners")]
+    [Tooltip("Reference to the FoliageSpawner script.")]
+    [SerializeField] private FoliageSpawner foliageSpawner;
+
+    [Tooltip("Reference to the BoulderSpawner script.")]
+    [SerializeField] private BoulderSpawner boulderSpawner;
+
+    [Tooltip("Reference to the ObjectPlacementManager script.")]
+    [SerializeField] private ObjectPlacementManager placementManager;
+
     // Dictionary to keep track of generated chunks using their coordinates as keys.
     private Dictionary<Vector2Int, GameObject> chunkDictionary = new Dictionary<Vector2Int, GameObject>();
 
@@ -66,6 +76,29 @@ public class VoxelTerrain : MonoBehaviour
             return;
         }
 
+        if (foliageSpawner == null)
+        {
+            Debug.LogError("FoliageSpawner reference is not set in VoxelTerrain.");
+            enabled = false;
+            return;
+        }
+
+        if (boulderSpawner == null)
+        {
+            Debug.LogError("BoulderSpawner reference is not set in VoxelTerrain.");
+            enabled = false;
+            return;
+        }
+
+        if (placementManager == null)
+        {
+            Debug.LogError("ObjectPlacementManager reference is not set in VoxelTerrain.");
+            enabled = false;
+            return;
+        }
+        
+        foliageSpawner.placementManager = placementManager;
+        boulderSpawner.placementManager = placementManager;
         lastPlayerChunkCoord = GetChunkCoordFromPosition(player.position);
         UpdateChunks();
     }
@@ -144,7 +177,8 @@ public class VoxelTerrain : MonoBehaviour
         chunkObject.layer = LayerMask.NameToLayer("Ground");
 
         // Generate mesh data for the chunk.
-        MeshData meshData = GenerateChunkMesh(chunkCoord);
+        int[,] heightMap;
+        MeshData meshData = GenerateChunkMesh(chunkCoord, out heightMap);
 
         // Create mesh from mesh data.
         MeshFilter meshFilter = chunkObject.AddComponent<MeshFilter>();
@@ -165,6 +199,12 @@ public class VoxelTerrain : MonoBehaviour
         MeshCollider meshCollider = chunkObject.AddComponent<MeshCollider>();
         meshCollider.sharedMesh = mesh;
 
+        // Spawn grass on the chunk using the FoliageSpawner.
+        foliageSpawner.SpawnGrass(chunkObject, heightMap, voxelScale, chunkSize);
+
+        // Spawn boulders on the chunk using the BoulderSpawner.
+        boulderSpawner.SpawnBoulders(chunkObject, heightMap, voxelScale, chunkSize, chunkCoord);
+
         return chunkObject;
     }
 
@@ -172,11 +212,12 @@ public class VoxelTerrain : MonoBehaviour
     /// Generates the mesh data for a chunk at the specified coordinate.
     /// </summary>
     /// <param name="chunkCoord">The coordinate of the chunk.</param>
+    /// <param name="heightMap">Outputs the height map used for the chunk.</param>
     /// <returns>The generated mesh data.</returns>
-    MeshData GenerateChunkMesh(Vector2Int chunkCoord)
+    MeshData GenerateChunkMesh(Vector2Int chunkCoord, out int[,] heightMap)
     {
         MeshData meshData = new MeshData();
-        int[,] heightMap = new int[chunkSize + 1, chunkSize + 1];
+        heightMap = new int[chunkSize + 1, chunkSize + 1];
 
         System.Random prng = new System.Random(seed);
         float offsetX = prng.Next(-100000, 100000);
@@ -280,7 +321,7 @@ public class VoxelTerrain : MonoBehaviour
     /// <param name="heightMap">The height map of the chunk.</param>
     /// <param name="x">X-coordinate in the height map.</param>
     /// <param name="z">Z-coordinate in the height map.</param>
-    /// <param="y">Current Y-level being evaluated.</param>
+    /// <param name="y">Current Y-level being evaluated.</param>
     /// <returns>True if the face should be visible; otherwise, false.</returns>
     bool IsFaceVisible(int[,] heightMap, int x, int z, int y)
     {
