@@ -52,6 +52,9 @@ public class VoxelTerrain : MonoBehaviour
     [Tooltip("Reference to the BoulderSpawner script.")]
     [SerializeField] private BoulderSpawner boulderSpawner;
 
+    [Tooltip("Reference to the TreeSpawner script.")]
+    [SerializeField] private TreeSpawner treeSpawner;
+
     [Tooltip("Reference to the ObjectPlacementManager script.")]
     [SerializeField] private ObjectPlacementManager placementManager;
 
@@ -95,6 +98,13 @@ public class VoxelTerrain : MonoBehaviour
             return;
         }
 
+        if (treeSpawner == null)
+        {
+            Debug.LogError("TreeSpawner reference is not set in VoxelTerrain.");
+            enabled = false;
+            return;
+        }
+
         if (placementManager == null)
         {
             Debug.LogError("ObjectPlacementManager reference is not set in VoxelTerrain.");
@@ -105,6 +115,7 @@ public class VoxelTerrain : MonoBehaviour
         // Assign the same placement manager to both spawners
         foliageSpawner.placementManager = placementManager;
         boulderSpawner.placementManager = placementManager;
+        treeSpawner.placementManager = placementManager;
 
         lastPlayerChunkCoord = GetChunkCoordFromPosition(player.position);
         UpdateChunks();
@@ -209,11 +220,14 @@ public class VoxelTerrain : MonoBehaviour
         MeshCollider meshCollider = chunkObject.AddComponent<MeshCollider>();
         meshCollider.sharedMesh = mesh;
 
-        // Spawn grass on the chunk using the FoliageSpawner.
-        foliageSpawner.SpawnGrass(chunkObject, heightMap, voxelScale, chunkSize);
-
         // Spawn boulders on the chunk using the BoulderSpawner.
         boulderSpawner.SpawnBoulders(chunkObject, heightMap, voxelScale, chunkSize, chunkCoord);
+
+        // Spawn trees on the chunk using the TreeSpawner.
+        treeSpawner.SpawnTrees(chunkObject, heightMap, voxelScale, chunkSize, chunkCoord);
+
+        // Spawn grass on the chunk using the FoliageSpawner.
+        foliageSpawner.SpawnGrass(chunkObject, heightMap, voxelScale, chunkSize);
 
         return chunkObject;
     }

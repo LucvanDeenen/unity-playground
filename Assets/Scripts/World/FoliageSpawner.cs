@@ -14,7 +14,7 @@ public class FoliageSpawner : MonoBehaviour
     public int grassDensity = 5;
 
     [Tooltip("The height range for spawning grass (e.g., plains).")]
-    public Vector2 heightRange = new Vector2(0f, 40f);
+    public Vector2 heightRange = new Vector2(5f, 40f);
 
     [Tooltip("Minimum distance between grass and other objects.")]
     public float minDistanceBetweenGrass = 1f;

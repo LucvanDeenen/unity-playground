@@ -14,7 +14,7 @@ public class BoulderSpawner : MonoBehaviour
     public float spawnChance = 0.05f;
 
     [Tooltip("The height range for spawning boulders.")]
-    public Vector2 heightRange = new Vector2(10f, 40f);
+    public Vector2 heightRange = new Vector2(10f, 50f);
 
     [Tooltip("Spacing between boulders (in world units).")]
     public float boulderSpacing = 10f;
