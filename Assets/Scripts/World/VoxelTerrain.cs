@@ -64,6 +64,11 @@ public class VoxelTerrain : MonoBehaviour
     // Stores the last player chunk position to determine when to update chunks.
     private Vector2Int lastPlayerChunkCoord;
 
+    // Noise map texture for visualization
+    [Header("Debug")]
+    [Tooltip("Generated noise map texture for visualization.")]
+    [SerializeField] public Texture2D noiseMapTexture;
+
     /// <summary>
     /// Initializes the terrain by generating initial chunks around the player.
     /// </summary>
@@ -96,11 +101,16 @@ public class VoxelTerrain : MonoBehaviour
             enabled = false;
             return;
         }
-        
+
+        // Assign the same placement manager to both spawners
         foliageSpawner.placementManager = placementManager;
         boulderSpawner.placementManager = placementManager;
+
         lastPlayerChunkCoord = GetChunkCoordFromPosition(player.position);
         UpdateChunks();
+
+        // Generate the noise map texture for visualization
+        GenerateNoiseMapTexture();
     }
 
     /// <summary>
@@ -453,6 +463,54 @@ public class VoxelTerrain : MonoBehaviour
         int x = Mathf.FloorToInt(position.x / (chunkSize * voxelScale));
         int z = Mathf.FloorToInt(position.z / (chunkSize * voxelScale));
         return new Vector2Int(x, z);
+    }
+
+    /// <summary>
+    /// Generates the noise map texture for visualization.
+    /// </summary>
+    void GenerateNoiseMapTexture()
+    {
+        int textureSize = 256; // Adjust the size as needed.
+        noiseMapTexture = new Texture2D(textureSize, textureSize);
+
+        float[,] noiseMap = new float[textureSize, textureSize];
+
+        System.Random prng = new System.Random(seed);
+        float offsetX = prng.Next(-100000, 100000);
+        float offsetZ = prng.Next(-100000, 100000);
+
+        for (int x = 0; x < textureSize; x++)
+        {
+            for (int z = 0; z < textureSize; z++)
+            {
+                float amplitude = 1f;
+                float frequency = 1f;
+                float noiseHeight = 0f;
+
+                for (int i = 0; i < octaves; i++)
+                {
+                    float sampleX = (x + offsetX) * noiseScale * frequency;
+                    float sampleZ = (z + offsetZ) * noiseScale * frequency;
+
+                    float perlinValue = Mathf.PerlinNoise(sampleX, sampleZ) * 2 - 1;
+                    noiseHeight += perlinValue * amplitude;
+
+                    amplitude *= persistence;
+                    frequency *= lacunarity;
+                }
+
+                noiseMap[x, z] = noiseHeight;
+
+                // Normalize the value to [0,1]
+                float normalizedHeight = (noiseHeight + 1) / 2f;
+
+                // Apply grayscale color
+                Color color = Color.Lerp(Color.black, Color.white, normalizedHeight);
+                noiseMapTexture.SetPixel(x, z, color);
+            }
+        }
+
+        noiseMapTexture.Apply();
     }
 }
 
