@@ -8,42 +8,42 @@ public class VoxelTerrain : MonoBehaviour
 {
     [Header("Player Settings")]
     [Tooltip("The player Transform reference. This is used to track the player's position and load chunks around the player.")]
-    public Transform player;
+    [SerializeField] private Transform player;
 
     [Header("Chunk Settings")]
     [Tooltip("Defines the size of each chunk in terms of the number of voxels per edge. Larger values create bigger chunks with more voxels.")]
-    public int chunkSize = 32;
+    [SerializeField] private int chunkSize = 32;
 
     [Tooltip("The radius around the player within which chunks are generated. This is measured in chunks. Higher values increase the render distance but may affect performance.")]
-    public int renderDistance = 20;
+    [SerializeField] private int renderDistance = 5;
 
     [Tooltip("The physical size of each voxel block. Smaller values create more detailed terrain, while larger values result in larger blocks.")]
-    public float voxelScale = 0.75f;
+    [SerializeField] private float voxelScale = 0.75f;
 
     [Header("Terrain Noise Settings")]
     [Tooltip("The seed value for generating consistent terrain noise. Changing the seed will result in different terrain being generated.")]
-    public int seed = 42;
+    [SerializeField] private int seed = 42;
 
     [Tooltip("Multiplier applied to the height of the terrain. Higher values result in taller mountains and deeper valleys.")]
     [Range(10, 100f)]
-    public float heightMultiplier = 15f;
+    [SerializeField] private float heightMultiplier = 15f;
 
     [Tooltip("Controls the 'zoom' level of the Perlin noise. Smaller values create more gradual terrain variation, while larger values create sharper terrain features.")]
-    public float noiseScale = 0.005f;
+    [SerializeField] private float noiseScale = 0.005f;
 
     [Tooltip("The number of noise layers used to add detail to the terrain. More octaves add more fine details but can increase computation time.")]
-    public int octaves = 6;
+    [SerializeField] private int octaves = 6;
 
     [Tooltip("Determines how much the amplitude decreases for each successive octave. A lower value means less variation in higher octaves, resulting in smoother terrain.")]
     [Range(0f, 0.1f)]
-    public float persistence = 0.1f;
+    [SerializeField] private float persistence = 0.1f;
 
     [Tooltip("Determines how much the frequency increases for each successive octave. Higher values result in more frequent variations, creating rougher terrain.")]
-    public float lacunarity = 5f;
+    [SerializeField] private float lacunarity = 5f;
 
     [Header("Visual Settings")]
     [Tooltip("The material applied to voxel blocks to define their appearance. This could include textures, colors, or shader properties.")]
-    public Material voxelMaterial;
+    [SerializeField] private Material voxelMaterial;
 
     // Dictionary to keep track of generated chunks using their coordinates as keys.
     private Dictionary<Vector2Int, GameObject> chunkDictionary = new Dictionary<Vector2Int, GameObject>();
@@ -51,20 +51,36 @@ public class VoxelTerrain : MonoBehaviour
     // Workaround for preventing issues with rendering
     private float baseHeight = 20f;
 
+    // Stores the last player chunk position to determine when to update chunks.
+    private Vector2Int lastPlayerChunkCoord;
+
     /// <summary>
     /// Initializes the terrain by generating initial chunks around the player.
     /// </summary>
     void Start()
     {
+        if (player == null)
+        {
+            Debug.LogError("Player reference is not set in VoxelTerrain.");
+            enabled = false;
+            return;
+        }
+
+        lastPlayerChunkCoord = GetChunkCoordFromPosition(player.position);
         UpdateChunks();
     }
 
     /// <summary>
-    /// Updates the terrain chunks every frame based on the player's position.
+    /// Updates the terrain chunks based on the player's position when the player moves to a new chunk.
     /// </summary>
     void Update()
     {
-        UpdateChunks();
+        Vector2Int currentChunkCoord = GetChunkCoordFromPosition(player.position);
+        if (currentChunkCoord != lastPlayerChunkCoord)
+        {
+            UpdateChunks();
+            lastPlayerChunkCoord = currentChunkCoord;
+        }
     }
 
     /// <summary>
@@ -74,8 +90,8 @@ public class VoxelTerrain : MonoBehaviour
     {
         Vector2Int playerChunkCoord = GetChunkCoordFromPosition(player.position);
 
-        // List of chunks that should remain active.
-        List<Vector2Int> activeChunks = new List<Vector2Int>();
+        // HashSet for efficient lookup of active chunks.
+        HashSet<Vector2Int> activeChunks = new HashSet<Vector2Int>();
 
         // Determine the range of chunks to be generated around the player.
         for (int xOffset = -renderDistance; xOffset <= renderDistance; xOffset++)
@@ -120,13 +136,11 @@ public class VoxelTerrain : MonoBehaviour
         // Create a new GameObject for the chunk.
         GameObject chunkObject = new GameObject($"Chunk_{chunkCoord.x}_{chunkCoord.y}");
         chunkObject.transform.parent = transform;
-        Vector3 chunkPosition = new Vector3(chunkCoord.x * chunkSize * voxelScale, 0, chunkCoord.y * chunkSize * voxelScale);
+        Vector3 chunkPosition = new Vector3(chunkCoord.x * chunkSize, 0, chunkCoord.y * chunkSize) * voxelScale;
         chunkObject.transform.position = chunkPosition;
-        
-        // Set the ground tag
-        chunkObject.tag = "Ground";
 
-        // Optionally set the layer of the chunk to match the GroundLayers mask
+        // Set the ground tag and layer (ensure "Ground" layer exists in your project).
+        chunkObject.tag = "Ground";
         chunkObject.layer = LayerMask.NameToLayer("Ground");
 
         // Generate mesh data for the chunk.
@@ -139,7 +153,8 @@ public class VoxelTerrain : MonoBehaviour
         Mesh mesh = new Mesh
         {
             vertices = meshData.vertices.ToArray(),
-            triangles = meshData.triangles.ToArray()
+            triangles = meshData.triangles.ToArray(),
+            uv = meshData.uvs.ToArray()
         };
         mesh.RecalculateNormals();
 
@@ -211,7 +226,7 @@ public class VoxelTerrain : MonoBehaviour
 
                 for (int y = startY; y <= endY; y++)
                 {
-                    Vector3 blockPosition = new Vector3(x * voxelScale, y * voxelScale, z * voxelScale);
+                    Vector3 blockPosition = new Vector3(x, y, z) * voxelScale;
 
                     // Add faces for the block at this position and height.
 
@@ -264,7 +279,7 @@ public class VoxelTerrain : MonoBehaviour
     /// </summary>
     /// <param name="heightMap">The height map of the chunk.</param>
     /// <param name="x">X-coordinate in the height map.</param>
-    /// <param="z">Z-coordinate in the height map.</param>
+    /// <param name="z">Z-coordinate in the height map.</param>
     /// <param="y">Current Y-level being evaluated.</param>
     /// <returns>True if the face should be visible; otherwise, false.</returns>
     bool IsFaceVisible(int[,] heightMap, int x, int z, int y)
@@ -313,6 +328,15 @@ public class VoxelTerrain : MonoBehaviour
         meshData.triangles.Add(vertexIndex + 2);
         meshData.triangles.Add(vertexIndex + 3);
         meshData.triangles.Add(vertexIndex + 0);
+
+        // Add UVs for texturing.
+        meshData.uvs.AddRange(new Vector2[]
+        {
+            new Vector2(0, 0), // Bottom-left
+            new Vector2(0, 1), // Top-left
+            new Vector2(1, 1), // Top-right
+            new Vector2(1, 0)  // Bottom-right
+        });
     }
 
     /// <summary>
@@ -392,7 +416,7 @@ public class VoxelTerrain : MonoBehaviour
 }
 
 /// <summary>
-/// Represents mesh data containing vertices and triangles.
+/// Represents mesh data containing vertices, triangles, and UVs.
 /// </summary>
 public class MeshData
 {
@@ -405,4 +429,9 @@ public class MeshData
     /// The list of triangle indices in the mesh.
     /// </summary>
     public List<int> triangles = new List<int>();
+
+    /// <summary>
+    /// The list of UV coordinates for texturing.
+    /// </summary>
+    public List<Vector2> uvs = new List<Vector2>();
 }
