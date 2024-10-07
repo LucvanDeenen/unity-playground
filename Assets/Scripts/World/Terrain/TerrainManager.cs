@@ -22,7 +22,7 @@ public class TerrainManager : MonoBehaviour
 
     private Dictionary<Vector2Int, TerrainChunk> chunkDictionary = new Dictionary<Vector2Int, TerrainChunk>();
     private Vector2Int lastPlayerChunkCoord;
-    private float voxelScale;
+    private float voxelScale = 0.75f;
 
     private ObjectPlacementManager placementManager;
     private NoiseGenerator noiseGenerator;
@@ -37,10 +37,12 @@ public class TerrainManager : MonoBehaviour
             return;
         }
 
-        // Initialize NoiseGenerator (unchanged) && MeshGenerator with static gradient heights
-        placementManager = transform.GetComponent<ObjectPlacementManager>();
+        placementManager = GetComponent<ObjectPlacementManager>();
+
+        // Initialize NoiseGenerator and MeshGenerator with parameters
         noiseGenerator = new NoiseGenerator(seed);
         meshGenerator = new MeshGenerator(voxelScale, terrainGradient);
+
         foreach (Spawner spawner in spawners)
         {
             if (spawner != null)

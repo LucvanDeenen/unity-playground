@@ -21,19 +21,7 @@ public class NoiseGenerator
     public NoiseGenerator(int seed)
     {
         this.seed = seed;
-
-        CalculateGlobalHeights();
         InitializeRandomOffsets();
-    }
-
-    private void CalculateGlobalHeights()
-    {
-        float amplitude = 1f;
-
-        for (int i = 0; i < octaves; i++)
-        {
-            amplitude *= persistence;
-        }
     }
 
     private void InitializeRandomOffsets()

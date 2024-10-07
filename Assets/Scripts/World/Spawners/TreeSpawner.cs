@@ -9,9 +9,9 @@ public class TreeSpawner : Spawner
     [Tooltip("The list of tree prefabs to spawn on the terrain.")]
     public GameObject[] treePrefabs;
 
-    private Vector2 heightRange = new Vector2(10f, 35f);
-    private float minDistanceBetweenTrees = 5f;
-    private float spawnChance = 0.1f;
+    private Vector2 heightRange = new Vector2(10f, 50f);
+    private float minDistanceBetweenTrees = 10f;
+    private float spawnChance = 0.25f;
 
     /// <summary>
     /// Spawns trees on the given chunk.

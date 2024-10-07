@@ -24,7 +24,8 @@ public abstract class Spawner : MonoBehaviour
     {
         // Randomize the y-axis rotation for variety
         float yRotation = Random.Range(0f, 360f);
+        
         // Set z-axis rotation to 90 degrees
-        return Quaternion.Euler(0f, yRotation, 90f);
+        return Quaternion.Euler(-90f, yRotation, 90f);
     }
 }
