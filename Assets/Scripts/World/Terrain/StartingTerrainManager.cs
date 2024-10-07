@@ -2,9 +2,9 @@ using UnityEngine;
 using System.Collections.Generic;
 
 /// <summary>
-/// Manages terrain chunks around the player.
+/// Manages terrain chunks around the starting player.
 /// </summary>
-public class TerrainManager : MonoBehaviour
+public class StartingTerrainManager : MonoBehaviour
 {
 
     [Header("Player Settings")]
@@ -19,10 +19,10 @@ public class TerrainManager : MonoBehaviour
     public List<Spawner> spawners = new List<Spawner>();
 
     private Dictionary<Vector2Int, TerrainChunk> chunkDictionary = new Dictionary<Vector2Int, TerrainChunk>();
-    private Vector2Int lastPlayerChunkCoord;
+    private Vector3 spawnPoint;
 
     private float voxelScale = 0.75f;
-    private int renderDistance = 5;
+    private int renderDistance = 2;
     private int chunkSize = 32;
 
     private ObjectPlacementManager placementManager;
@@ -38,7 +38,11 @@ public class TerrainManager : MonoBehaviour
             return;
         }
 
+        // Set placement manager
         placementManager = GetComponent<ObjectPlacementManager>();
+
+        // Store the player's initial spawn position
+        spawnPoint = player.position;
 
         // Initialize NoiseGenerator and MeshGenerator with parameters
         noiseGenerator = new NoiseGenerator(seed);
@@ -51,19 +55,7 @@ public class TerrainManager : MonoBehaviour
                 spawner.SetPlacementManager(placementManager);
             }
         }
-
-        lastPlayerChunkCoord = GetChunkCoordFromPosition(player.position);
         UpdateChunks();
-    }
-
-    void Update()
-    {
-        Vector2Int currentChunkCoord = GetChunkCoordFromPosition(player.position);
-        if (currentChunkCoord != lastPlayerChunkCoord)
-        {
-            UpdateChunks();
-            lastPlayerChunkCoord = currentChunkCoord;
-        }
     }
 
     void UpdateChunks()
@@ -110,7 +102,10 @@ public class TerrainManager : MonoBehaviour
         // Generate height map as float[,]
         float[,] heightMapFloat = noiseGenerator.GenerateHeightMap(chunk.chunkSize + 1, chunk.chunkSize + 1, chunk.chunkCoord, chunk.chunkSize);
 
-        // Convert float[,] heightMap to int[,]
+        // Modify the height map to increase terrain height around the player's spawn point
+        CarveValleyInHeightMap(heightMapFloat, chunk);
+
+        // Convert float[,] heightMap to int[,] for spawners
         int[,] heightMapInt = new int[chunk.chunkSize + 1, chunk.chunkSize + 1];
         for (int x = 0; x <= chunk.chunkSize; x++)
         {
@@ -120,7 +115,7 @@ public class TerrainManager : MonoBehaviour
             }
         }
 
-        // Generate mesh data using the float[,] heightMap
+        // Generate mesh data using the modified float[,] heightMap
         MeshData meshData = meshGenerator.GenerateMeshData(heightMapFloat);
 
         // Update chunk mesh
@@ -132,6 +127,48 @@ public class TerrainManager : MonoBehaviour
             if (spawner != null)
             {
                 spawner.Spawn(chunk.chunkObject, heightMapInt, voxelScale, chunk.chunkSize, chunk.chunkCoord);
+            }
+        }
+    }
+    private void CarveValleyInHeightMap(float[,] heightMap, TerrainChunk chunk)
+    {
+        // Define the radius of the valley
+        float valleyRadius = 30f; // Adjust as needed
+        float valleyDepth = 20f; // Depth of the valley
+
+        // Get the center position (player's spawn point projected onto XZ plane)
+        Vector2 centerPosition = new Vector2(spawnPoint.x, spawnPoint.z);
+
+        // Get the chunk's world position
+        Vector3 chunkPosition = chunk.chunkObject.transform.position;
+
+        int width = heightMap.GetLength(0);
+        int height = heightMap.GetLength(1);
+
+        for (int x = 0; x < width; x++)
+        {
+            for (int z = 0; z < height; z++)
+            {
+                // Calculate the world position of the current point
+                float worldX = chunkPosition.x + (x * voxelScale);
+                float worldZ = chunkPosition.z + (z * voxelScale);
+
+                Vector2 pointPosition = new Vector2(worldX, worldZ);
+
+                // Calculate the distance from the point to the center position
+                float distance = Vector2.Distance(pointPosition, centerPosition);
+
+                if (distance <= valleyRadius)
+                {
+                    // Calculate normalized distance from the center
+                    float t = distance / valleyRadius;
+
+                    // Use a quadratic function for steep walls
+                    float depthFactor = Mathf.Pow(t, 2f); // Adjust exponent for steepness
+
+                    // Lower the height to create the valley
+                    heightMap[x, z] -= valleyDepth * (1f - depthFactor);
+                }
             }
         }
     }

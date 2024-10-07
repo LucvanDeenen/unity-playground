@@ -280,11 +280,6 @@ Transform:
   - {fileID: 705507995}
   m_Father: {fileID: 194100627}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!4 &775550245 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 3410576234783597214, guid: 214a29bdd397f334b9bd3e8df3a134b9, type: 3}
-  m_PrefabInstance: {fileID: 779800571}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &779800571
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -466,6 +461,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 214a29bdd397f334b9bd3e8df3a134b9, type: 3}
+--- !u!4 &779800572 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3543069883830038225, guid: 214a29bdd397f334b9bd3e8df3a134b9, type: 3}
+  m_PrefabInstance: {fileID: 779800571}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1844900039
 GameObject:
   m_ObjectHideFlags: 0
@@ -541,7 +541,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 86e90fb11b5d3c145add0acf0710ea33, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  player: {fileID: 775550245}
+  player: {fileID: 779800572}
   chunkSize: 32
   seed: 42
   renderDistance: 12
