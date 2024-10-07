@@ -22,7 +22,7 @@ public class StartingTerrainManager : MonoBehaviour
     private Vector2Int lastPlayerChunkCoord;
 
     private float voxelScale = 0.75f;
-    private int renderDistance = 5;
+    private int renderDistance = 3;
     private int chunkSize = 32;
 
     private ObjectPlacementManager placementManager;
@@ -99,6 +99,19 @@ public class StartingTerrainManager : MonoBehaviour
     {
         // Generate height map as float[,]
         float[,] heightMapFloat = noiseGenerator.GenerateHeightMap(chunk.chunkSize + 1, chunk.chunkSize + 1, chunk.chunkCoord, chunk.chunkSize);
+
+        // Check if the chunk is within a 2x2 tile radius of the player
+        Vector2Int playerChunkCoord = lastPlayerChunkCoord;
+        if (Mathf.Abs(chunk.chunkCoord.x - playerChunkCoord.x) <= 1 && Mathf.Abs(chunk.chunkCoord.y - playerChunkCoord.y) <= 1)
+        {
+            for (int x = 0; x <= chunk.chunkSize; x++)
+            {
+                for (int z = 0; z <= chunk.chunkSize; z++)
+                {
+                    heightMapFloat[x, z] -= 50;
+                }
+            }
+        }
 
         // Convert float[,] heightMap to int[,]
         int[,] heightMapInt = new int[chunk.chunkSize + 1, chunk.chunkSize + 1];
