@@ -76,26 +76,27 @@ public class MeshGenerator
         int vertexIndex = meshData.vertices.Count;
 
         meshData.vertices.AddRange(faceVertices);
+        bool invertTriangles = position.y < 0f;
 
-        if (direction == Vector3.up || direction == Vector3.forward || direction == Vector3.right)
+        if (invertTriangles)
         {
-            meshData.triangles.Add(vertexIndex + 0);
+            meshData.triangles.Add(vertexIndex + 2);
             meshData.triangles.Add(vertexIndex + 1);
-            meshData.triangles.Add(vertexIndex + 2);
-
-            meshData.triangles.Add(vertexIndex + 2);
-            meshData.triangles.Add(vertexIndex + 3);
             meshData.triangles.Add(vertexIndex + 0);
+
+            meshData.triangles.Add(vertexIndex + 0);
+            meshData.triangles.Add(vertexIndex + 3);
+            meshData.triangles.Add(vertexIndex + 2);
         }
         else
         {
-            meshData.triangles.Add(vertexIndex + 2);
+            meshData.triangles.Add(vertexIndex + 0);
             meshData.triangles.Add(vertexIndex + 1);
-            meshData.triangles.Add(vertexIndex + 0);
-
-            meshData.triangles.Add(vertexIndex + 0);
-            meshData.triangles.Add(vertexIndex + 3);
             meshData.triangles.Add(vertexIndex + 2);
+
+            meshData.triangles.Add(vertexIndex + 2);
+            meshData.triangles.Add(vertexIndex + 3);
+            meshData.triangles.Add(vertexIndex + 0);
         }
 
         meshData.uvs.AddRange(new Vector2[]
