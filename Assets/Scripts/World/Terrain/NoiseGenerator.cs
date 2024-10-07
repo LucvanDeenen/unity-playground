@@ -35,7 +35,7 @@ public class NoiseGenerator
     public float GenerateSmoothNoise(float x, float z)
     {
         // Use different noise parameters for smoother terrain
-        float frequency = 0.02f; 
+        float frequency = 0.01f; 
         float amplitude = 20f;   
 
         // Implement your noise function here
