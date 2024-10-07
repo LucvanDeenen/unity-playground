@@ -14,11 +14,13 @@ public class StartingTerrainManager : MonoBehaviour
     public int seed = 42;
     public Material voxelMaterial;
     public Gradient terrainGradient;
+    public Color wallColor = new Color(0.5f, 0.3f, 0.2f); // Grey/Brownish color for walls
 
     [Header("Spawners")]
     public List<Spawner> spawners = new List<Spawner>();
 
     private Dictionary<Vector2Int, TerrainChunk> chunkDictionary = new Dictionary<Vector2Int, TerrainChunk>();
+    private Vector2Int lastPlayerChunkCoord;
 
     private float voxelScale = 0.75f;
     private int renderDistance = 2;
@@ -41,7 +43,7 @@ public class StartingTerrainManager : MonoBehaviour
 
         // Initialize NoiseGenerator and MeshGenerator with parameters
         noiseGenerator = new NoiseGenerator(seed);
-        meshGenerator = new MeshGenerator(voxelScale, terrainGradient);
+        meshGenerator = new MeshGenerator(voxelScale, terrainGradient, wallColor);
 
         foreach (Spawner spawner in spawners)
         {
@@ -50,6 +52,8 @@ public class StartingTerrainManager : MonoBehaviour
                 spawner.SetPlacementManager(placementManager);
             }
         }
+
+        lastPlayerChunkCoord = GetChunkCoordFromPosition(player.position);
         UpdateChunks();
     }
 
@@ -97,6 +101,9 @@ public class StartingTerrainManager : MonoBehaviour
         // Generate height map as float[,]
         float[,] heightMapFloat = noiseGenerator.GenerateHeightMap(chunk.chunkSize + 1, chunk.chunkSize + 1, chunk.chunkCoord, chunk.chunkSize);
 
+        // Initialize the isCliffArea array
+        bool[,] isCliffArea = new bool[chunk.chunkSize + 1, chunk.chunkSize + 1];
+
         // Adjust heights to create cliffs around lowered area and smooth terrain at the bottom
         float lowerRadius = 35f;      // Radius of lowered area
         float cliffWidth = 2f;        // Width of the cliff (transition area)
@@ -118,6 +125,7 @@ public class StartingTerrainManager : MonoBehaviour
                 {
                     float smoothNoise = noiseGenerator.GenerateSmoothNoise(worldX, worldZ);
                     heightMapFloat[x, z] = smoothNoise + heightOffset;
+                    isCliffArea[x, z] = false; // Not a cliff area
                 }
                 else if (distance <= lowerRadius + cliffWidth)
                 {
@@ -125,8 +133,13 @@ public class StartingTerrainManager : MonoBehaviour
                     float t = (distance - lowerRadius) / cliffWidth;
                     float loweredHeight = noiseGenerator.GenerateSmoothNoise(worldX, worldZ) + heightOffset;
                     heightMapFloat[x, z] = Mathf.Lerp(loweredHeight, heightMapFloat[x, z], t);
+                    isCliffArea[x, z] = true; // Mark as cliff area
                 }
-                // Else, keep the original height
+                else
+                {
+                    isCliffArea[x, z] = false; // Not a cliff area
+                    // Keep the original height
+                }
             }
         }
 
@@ -140,8 +153,8 @@ public class StartingTerrainManager : MonoBehaviour
             }
         }
 
-        // Generate mesh data using the adjusted heightMap
-        MeshData meshData = meshGenerator.GenerateMeshData(heightMapFloat);
+        // Generate mesh data using the adjusted heightMap and isCliffArea
+        MeshData meshData = meshGenerator.GenerateMeshData(heightMapFloat, isCliffArea);
 
         // Update chunk mesh
         chunk.UpdateChunkMesh(meshData);
@@ -155,8 +168,6 @@ public class StartingTerrainManager : MonoBehaviour
             }
         }
     }
-
-
 
     Vector2Int GetChunkCoordFromPosition(Vector3 position)
     {

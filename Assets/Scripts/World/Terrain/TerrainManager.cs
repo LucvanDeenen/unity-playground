@@ -14,6 +14,7 @@ public class TerrainManager : MonoBehaviour
     public int seed = 42;
     public Material voxelMaterial;
     public Gradient terrainGradient;
+    public Color wallColor = new Color(0.5f, 0.3f, 0.2f);
 
     [Header("Spawners")]
     public List<Spawner> spawners = new List<Spawner>();
@@ -42,7 +43,7 @@ public class TerrainManager : MonoBehaviour
 
         // Initialize NoiseGenerator and MeshGenerator with parameters
         noiseGenerator = new NoiseGenerator(seed);
-        meshGenerator = new MeshGenerator(voxelScale, terrainGradient);
+        meshGenerator = new MeshGenerator(voxelScale, terrainGradient, wallColor);
 
         foreach (Spawner spawner in spawners)
         {
@@ -109,6 +110,7 @@ public class TerrainManager : MonoBehaviour
     {
         // Generate height map as float[,]
         float[,] heightMapFloat = noiseGenerator.GenerateHeightMap(chunk.chunkSize + 1, chunk.chunkSize + 1, chunk.chunkCoord, chunk.chunkSize);
+        bool[,] isCliffArea = new bool[chunk.chunkSize + 1, chunk.chunkSize + 1];
 
         // Convert float[,] heightMap to int[,]
         int[,] heightMapInt = new int[chunk.chunkSize + 1, chunk.chunkSize + 1];
@@ -117,11 +119,12 @@ public class TerrainManager : MonoBehaviour
             for (int z = 0; z <= chunk.chunkSize; z++)
             {
                 heightMapInt[x, z] = Mathf.RoundToInt(heightMapFloat[x, z]);
+                isCliffArea[x, z] = false;
             }
         }
 
         // Generate mesh data using the float[,] heightMap
-        MeshData meshData = meshGenerator.GenerateMeshData(heightMapFloat);
+        MeshData meshData = meshGenerator.GenerateMeshData(heightMapFloat, isCliffArea);
 
         // Update chunk mesh
         chunk.UpdateChunkMesh(meshData);
