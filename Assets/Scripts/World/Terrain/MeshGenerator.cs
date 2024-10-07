@@ -40,34 +40,34 @@ public class MeshGenerator
                     // Top face (only for the topmost block).
                     if (y == Mathf.FloorToInt(columnHeight))
                     {
-                        AddVoxelFace(meshData, blockPosition, Vector3.up, blockHeight + voxelScale, false);
+                        AddVoxelFace(meshData, blockPosition, Vector3.up, blockHeight + voxelScale);
                     }
 
                     // Bottom face (only for the bottommost block).
                     if (y == startY)
                     {
-                        AddVoxelFace(meshData, blockPosition, Vector3.down, blockHeight, false);
+                        AddVoxelFace(meshData, blockPosition, Vector3.down, blockHeight);
                     }
 
                     // Side faces.
                     if (IsFaceVisible(heightMap, x - 1, z, y))
                     {
-                        AddVoxelFace(meshData, blockPosition, Vector3.left, blockHeight, y < 0);
+                        AddVoxelFace(meshData, blockPosition, Vector3.left, blockHeight);
                     }
 
                     if (IsFaceVisible(heightMap, x + 1, z, y))
                     {
-                        AddVoxelFace(meshData, blockPosition, Vector3.right, blockHeight, y < 0);
+                        AddVoxelFace(meshData, blockPosition, Vector3.right, blockHeight);
                     }
 
                     if (IsFaceVisible(heightMap, x, z - 1, y))
                     {
-                        AddVoxelFace(meshData, blockPosition, Vector3.back, blockHeight, y < 0);
+                        AddVoxelFace(meshData, blockPosition, Vector3.back, blockHeight);
                     }
 
                     if (IsFaceVisible(heightMap, x, z + 1, y))
                     {
-                        AddVoxelFace(meshData, blockPosition, Vector3.forward, blockHeight, y < 0);
+                        AddVoxelFace(meshData, blockPosition, Vector3.forward, blockHeight);
                     }
                 }
             }
@@ -76,16 +76,16 @@ public class MeshGenerator
         return meshData;
     }
 
-    private void AddVoxelFace(MeshData meshData, Vector3 position, Vector3 direction, float height, bool invertTriangles)
+    private void AddVoxelFace(MeshData meshData, Vector3 position, Vector3 direction, float height)
     {
         Vector3[] faceVertices = GetFaceVertices(position, direction);
         int vertexIndex = meshData.vertices.Count;
 
         meshData.vertices.AddRange(faceVertices);
 
-        if (invertTriangles)
+        if (direction == Vector3.down || position.y < 0f)
         {
-            // Reverse triangle winding order for faces below y = 0
+            // Reverse triangle winding order for bottom faces or faces below y = 0
             meshData.triangles.Add(vertexIndex + 2);
             meshData.triangles.Add(vertexIndex + 1);
             meshData.triangles.Add(vertexIndex + 0);
