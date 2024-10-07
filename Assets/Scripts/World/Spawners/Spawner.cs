@@ -22,10 +22,14 @@ public abstract class Spawner : MonoBehaviour
     /// </summary>
     protected Quaternion GetConstrainedRotation()
     {
-        // Randomize the y-axis rotation for variety
-        float yRotation = Random.Range(0f, 360f);
-        
+        // Randomize the y-axis rotation and snap it to the closest multiple of 90 degrees
+        float randomYRotation = Random.Range(0f, 360f);
+        float snappedYRotation = Mathf.Round(randomYRotation / 90f) * 90f;
+
         // Set z-axis rotation to 90 degrees
-        return Quaternion.Euler(-90f, yRotation, 90f);
+        float zRotation = 90f;
+
+        // Return the constrained rotation
+        return Quaternion.Euler(-90f, snappedYRotation, zRotation);
     }
 }

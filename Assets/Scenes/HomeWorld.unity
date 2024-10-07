@@ -541,18 +541,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 86e90fb11b5d3c145add0acf0710ea33, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gradientMinHeight: 0
-  gradientMaxHeight: 100
   player: {fileID: 775550245}
   chunkSize: 32
-  renderDistance: 5
-  voxelScale: 0.75
   seed: 42
-  heightMultiplier: 15
-  noiseScale: 0.005
-  octaves: 6
-  persistence: 0.1
-  lacunarity: 5
+  renderDistance: 12
   voxelMaterial: {fileID: 2100000, guid: 7c480906a069a8a4b9b111d94052f14d, type: 2}
   terrainGradient:
     serializedVersion: 2
@@ -588,7 +580,6 @@ MonoBehaviour:
   - {fileID: 1844900050}
   - {fileID: 1844900049}
   - {fileID: 1844900048}
-  placementManager: {fileID: 1844900045}
 --- !u!114 &1844900048
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -601,11 +592,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d71cd79aab2bc714f8ceabaaa940f4da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  boulderPrefab: {fileID: 919132149155446097, guid: c2c2847243da7de4987a2d0059ad4436, type: 3}
-  spawnChance: 0.05
-  heightRange: {x: 10, y: 100}
-  boulderSpacing: 10
-  minDistanceBetweenBoulders: 5
+  boulderPrefab: {fileID: 293041722503904514, guid: 7b7fb1f52f010344fb9a03fad8990318, type: 3}
 --- !u!114 &1844900049
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -619,10 +606,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   treePrefabs:
-  - {fileID: 919132149155446097, guid: a243a90195e4e784e8642987a72e596a, type: 3}
-  spawnChance: 0.25
-  heightRange: {x: 10, y: 35}
-  minDistanceBetweenTrees: 5
+  - {fileID: 1837254904635664397, guid: 6d8e5af1a9e5d444bad8100d0b01b1cf, type: 3}
 --- !u!114 &1844900050
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -636,9 +620,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   grassPrefab: {fileID: 919132149155446097, guid: 7ce7b2bfdb4e4f24a8184f3f1b4e1d0b, type: 3}
-  grassDensity: 2
-  heightRange: {x: 5, y: 40}
-  minDistanceBetweenGrass: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
