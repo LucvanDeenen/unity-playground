@@ -50,8 +50,6 @@ public class StartingTerrainManager : MonoBehaviour
                 spawner.SetPlacementManager(placementManager);
             }
         }
-
-        lastPlayerChunkCoord = GetChunkCoordFromPosition(player.position);
         UpdateChunks();
     }
 
