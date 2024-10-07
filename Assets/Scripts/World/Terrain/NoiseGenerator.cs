@@ -6,29 +6,21 @@ using UnityEngine;
 public class NoiseGenerator
 {
     // Noise settings
-    private int seed;
-    private float noiseScale;
-    private int octaves;
-    private float persistence;
-    private float lacunarity;
-    private float baseHeight;
-    private float heightMultiplier;
-
-    private float maxPossibleHeight;
+    private float noiseScale = 0.005f;
+    private float persistence = 0.1f;
+    private float lacunarity = 5f;
+    private int octaves = 6;
+    private float heightMultiplier = 15f;
+    private float baseHeight = 20f;
 
     private System.Random prng;
     private float offsetX;
     private float offsetZ;
+    private int seed;
 
-    public NoiseGenerator(int seed, float noiseScale, int octaves, float persistence, float lacunarity, float baseHeight, float heightMultiplier)
+    public NoiseGenerator(int seed)
     {
         this.seed = seed;
-        this.noiseScale = noiseScale;
-        this.octaves = octaves;
-        this.persistence = persistence;
-        this.lacunarity = lacunarity;
-        this.baseHeight = baseHeight;
-        this.heightMultiplier = heightMultiplier;
 
         CalculateGlobalHeights();
         InitializeRandomOffsets();
@@ -36,12 +28,10 @@ public class NoiseGenerator
 
     private void CalculateGlobalHeights()
     {
-        maxPossibleHeight = 0f;
         float amplitude = 1f;
 
         for (int i = 0; i < octaves; i++)
         {
-            maxPossibleHeight += amplitude;
             amplitude *= persistence;
         }
     }

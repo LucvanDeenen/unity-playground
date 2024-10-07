@@ -6,17 +6,16 @@ using System.Collections.Generic;
 /// </summary>
 public class MeshGenerator
 {
-    private float voxelScale;
-    private Gradient terrainGradient;
-    private float gradientMinHeight;
-    private float gradientMaxHeight;
+    private float gradientMinHeight = 0f;
+    private float gradientMaxHeight = 100f;
 
-    public MeshGenerator(float voxelScale, Gradient terrainGradient, float gradientMinHeight, float gradientMaxHeight)
+    private Gradient terrainGradient;
+    private float voxelScale;
+
+    public MeshGenerator(float voxelScale, Gradient terrainGradient)
     {
         this.voxelScale = voxelScale;
         this.terrainGradient = terrainGradient;
-        this.gradientMinHeight = gradientMinHeight;
-        this.gradientMaxHeight = gradientMaxHeight;
     }
 
     public MeshData GenerateMeshData(float[,] heightMap)

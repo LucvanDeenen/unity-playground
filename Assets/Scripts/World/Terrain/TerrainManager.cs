@@ -6,45 +6,25 @@ using System.Collections.Generic;
 /// </summary>
 public class TerrainManager : MonoBehaviour
 {
-    [Header("Gradient Height Range")]
-    [Tooltip("The minimum height that corresponds to the start of the gradient.")]
-    public float gradientMinHeight = 0f;
-
-    [Tooltip("The maximum height that corresponds to the end of the gradient.")]
-    public float gradientMaxHeight = 100f;
 
     [Header("Player Settings")]
     public Transform player;
 
-    [Header("Chunk Settings")]
+    [Header("Terrain Settings")]
     public int chunkSize = 32;
-    public int renderDistance = 5;
-    public float voxelScale = 0.75f;
-
-    [Header("Terrain Noise Settings")]
     public int seed = 42;
-    [Range(10, 100f)]
-    public float heightMultiplier = 15f;
-    public float noiseScale = 0.005f;
-    public int octaves = 6;
-    [Range(0f, 0.1f)]
-    public float persistence = 0.1f;
-    public float lacunarity = 5f;
-
-    [Header("Visual Settings")]
+    public int renderDistance = 5;
     public Material voxelMaterial;
     public Gradient terrainGradient;
 
-    // References
-    public FoliageSpawner foliageSpawner;
-    public BoulderSpawner boulderSpawner;
-    public TreeSpawner treeSpawner;
-    public ObjectPlacementManager placementManager;
+    [Header("Spawners")]
+    public List<Spawner> spawners = new List<Spawner>();
 
-    // Private variables
     private Dictionary<Vector2Int, TerrainChunk> chunkDictionary = new Dictionary<Vector2Int, TerrainChunk>();
     private Vector2Int lastPlayerChunkCoord;
+    private float voxelScale;
 
+    private ObjectPlacementManager placementManager;
     private NoiseGenerator noiseGenerator;
     private MeshGenerator meshGenerator;
 
@@ -58,8 +38,16 @@ public class TerrainManager : MonoBehaviour
         }
 
         // Initialize NoiseGenerator (unchanged) && MeshGenerator with static gradient heights
-        noiseGenerator = new NoiseGenerator(seed, noiseScale, octaves, persistence, lacunarity, 20f, heightMultiplier);
-        meshGenerator = new MeshGenerator(voxelScale, terrainGradient, gradientMinHeight, gradientMaxHeight);
+        placementManager = transform.GetComponent<ObjectPlacementManager>();
+        noiseGenerator = new NoiseGenerator(seed);
+        meshGenerator = new MeshGenerator(voxelScale, terrainGradient);
+        foreach (Spawner spawner in spawners)
+        {
+            if (spawner != null)
+            {
+                spawner.SetPlacementManager(placementManager);
+            }
+        }
 
         lastPlayerChunkCoord = GetChunkCoordFromPosition(player.position);
         UpdateChunks();
@@ -136,19 +124,12 @@ public class TerrainManager : MonoBehaviour
         chunk.UpdateChunkMesh(meshData);
 
         // Spawn objects using the int[,] heightMap
-        if (foliageSpawner != null)
+        foreach (Spawner spawner in spawners)
         {
-            foliageSpawner.SpawnGrass(chunk.chunkObject, heightMapInt, voxelScale, chunk.chunkSize);
-        }
-
-        if (boulderSpawner != null)
-        {
-            boulderSpawner.SpawnBoulders(chunk.chunkObject, heightMapInt, voxelScale, chunk.chunkSize, chunk.chunkCoord);
-        }
-
-        if (treeSpawner != null)
-        {
-            treeSpawner.SpawnTrees(chunk.chunkObject, heightMapInt, voxelScale, chunk.chunkSize, chunk.chunkCoord);
+            if (spawner != null)
+            {
+                spawner.Spawn(chunk.chunkObject, heightMapInt, voxelScale, chunk.chunkSize, chunk.chunkCoord);
+            }
         }
     }
 
