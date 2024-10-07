@@ -40,34 +40,34 @@ public class MeshGenerator
                     // Top face (only for the topmost block).
                     if (y == Mathf.FloorToInt(columnHeight))
                     {
-                        AddVoxelFace(meshData, blockPosition, Vector3.up, blockHeight + voxelScale);
+                        AddVoxelFace(meshData, blockPosition, Vector3.up, blockHeight + voxelScale, false);
                     }
 
                     // Bottom face (only for the bottommost block).
                     if (y == startY)
                     {
-                        AddVoxelFace(meshData, blockPosition, Vector3.down, blockHeight);
+                        AddVoxelFace(meshData, blockPosition, Vector3.down, blockHeight, false);
                     }
 
                     // Side faces.
                     if (IsFaceVisible(heightMap, x - 1, z, y))
                     {
-                        AddVoxelFace(meshData, blockPosition, Vector3.left, blockHeight);
+                        AddVoxelFace(meshData, blockPosition, Vector3.left, blockHeight, y < 0);
                     }
 
                     if (IsFaceVisible(heightMap, x + 1, z, y))
                     {
-                        AddVoxelFace(meshData, blockPosition, Vector3.right, blockHeight);
+                        AddVoxelFace(meshData, blockPosition, Vector3.right, blockHeight, y < 0);
                     }
 
                     if (IsFaceVisible(heightMap, x, z - 1, y))
                     {
-                        AddVoxelFace(meshData, blockPosition, Vector3.back, blockHeight);
+                        AddVoxelFace(meshData, blockPosition, Vector3.back, blockHeight, y < 0);
                     }
 
                     if (IsFaceVisible(heightMap, x, z + 1, y))
                     {
-                        AddVoxelFace(meshData, blockPosition, Vector3.forward, blockHeight);
+                        AddVoxelFace(meshData, blockPosition, Vector3.forward, blockHeight, y < 0);
                     }
                 }
             }
@@ -76,21 +76,35 @@ public class MeshGenerator
         return meshData;
     }
 
-    private void AddVoxelFace(MeshData meshData, Vector3 position, Vector3 direction, float height)
+    private void AddVoxelFace(MeshData meshData, Vector3 position, Vector3 direction, float height, bool invertTriangles)
     {
         Vector3[] faceVertices = GetFaceVertices(position, direction);
         int vertexIndex = meshData.vertices.Count;
 
         meshData.vertices.AddRange(faceVertices);
 
-        // Define triangles in clockwise order.
-        meshData.triangles.Add(vertexIndex + 0);
-        meshData.triangles.Add(vertexIndex + 1);
-        meshData.triangles.Add(vertexIndex + 2);
+        if (invertTriangles)
+        {
+            // Reverse triangle winding order for faces below y = 0
+            meshData.triangles.Add(vertexIndex + 2);
+            meshData.triangles.Add(vertexIndex + 1);
+            meshData.triangles.Add(vertexIndex + 0);
 
-        meshData.triangles.Add(vertexIndex + 2);
-        meshData.triangles.Add(vertexIndex + 3);
-        meshData.triangles.Add(vertexIndex + 0);
+            meshData.triangles.Add(vertexIndex + 0);
+            meshData.triangles.Add(vertexIndex + 3);
+            meshData.triangles.Add(vertexIndex + 2);
+        }
+        else
+        {
+            // Standard triangle winding order
+            meshData.triangles.Add(vertexIndex + 0);
+            meshData.triangles.Add(vertexIndex + 1);
+            meshData.triangles.Add(vertexIndex + 2);
+
+            meshData.triangles.Add(vertexIndex + 2);
+            meshData.triangles.Add(vertexIndex + 3);
+            meshData.triangles.Add(vertexIndex + 0);
+        }
 
         // Add UVs for texturing.
         meshData.uvs.AddRange(new Vector2[]
@@ -186,14 +200,18 @@ public class MeshGenerator
         int neighborStartY = Mathf.FloorToInt(Mathf.Min(0, neighborHeight));
         int neighborEndY = Mathf.FloorToInt(Mathf.Max(0, neighborHeight));
 
-        // Adjust the logic for visibility when y < 0.
-        if (y >= 0)
-        {
-            return y > neighborEndY || y < neighborStartY;
-        }
-        else
-        {
-            return y < neighborStartY || y > neighborEndY;
-        }
+        // Face is visible if there is a difference in heights between current block and neighbor
+        return y < neighborStartY || y > neighborEndY;
     }
+}
+
+/// <summary>
+/// Contains data for constructing the mesh, including vertices, triangles, UVs, and colors.
+/// </summary>
+public class MeshData
+{
+    public List<Vector3> vertices = new List<Vector3>();
+    public List<int> triangles = new List<int>();
+    public List<Vector2> uvs = new List<Vector2>();
+    public List<Color> colors = new List<Color>();
 }
