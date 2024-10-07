@@ -77,25 +77,25 @@ public class MeshGenerator
 
         meshData.vertices.AddRange(faceVertices);
 
-        if (direction == Vector3.down || direction == Vector3.back || direction == Vector3.left)
+        if (direction == Vector3.up || direction == Vector3.forward || direction == Vector3.right)
         {
-            meshData.triangles.Add(vertexIndex + 2);
+            meshData.triangles.Add(vertexIndex + 0);
             meshData.triangles.Add(vertexIndex + 1);
-            meshData.triangles.Add(vertexIndex + 0);
-
-            meshData.triangles.Add(vertexIndex + 0);
-            meshData.triangles.Add(vertexIndex + 3);
             meshData.triangles.Add(vertexIndex + 2);
+
+            meshData.triangles.Add(vertexIndex + 2);
+            meshData.triangles.Add(vertexIndex + 3);
+            meshData.triangles.Add(vertexIndex + 0);
         }
         else
         {
-            meshData.triangles.Add(vertexIndex + 0);
+            meshData.triangles.Add(vertexIndex + 2);
             meshData.triangles.Add(vertexIndex + 1);
-            meshData.triangles.Add(vertexIndex + 2);
-
-            meshData.triangles.Add(vertexIndex + 2);
-            meshData.triangles.Add(vertexIndex + 3);
             meshData.triangles.Add(vertexIndex + 0);
+
+            meshData.triangles.Add(vertexIndex + 0);
+            meshData.triangles.Add(vertexIndex + 3);
+            meshData.triangles.Add(vertexIndex + 2);
         }
 
         meshData.uvs.AddRange(new Vector2[]
