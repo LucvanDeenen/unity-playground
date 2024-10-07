@@ -1,9 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-/// <summary>
-/// Generates mesh data from a height map.
-/// </summary>
 public class MeshGenerator
 {
     private float gradientMinHeight = 0f;
@@ -37,19 +34,16 @@ public class MeshGenerator
                     Vector3 blockPosition = new Vector3(x, y, z) * voxelScale;
                     float blockHeight = y * voxelScale;
 
-                    // Top face (only for the topmost block).
                     if (y == Mathf.FloorToInt(columnHeight))
                     {
                         AddVoxelFace(meshData, blockPosition, Vector3.up, blockHeight + voxelScale);
                     }
 
-                    // Bottom face (only for the bottommost block).
                     if (y == startY)
                     {
                         AddVoxelFace(meshData, blockPosition, Vector3.down, blockHeight);
                     }
 
-                    // Side faces.
                     if (IsFaceVisible(heightMap, x - 1, z, y))
                     {
                         AddVoxelFace(meshData, blockPosition, Vector3.left, blockHeight);
@@ -82,10 +76,10 @@ public class MeshGenerator
         int vertexIndex = meshData.vertices.Count;
 
         meshData.vertices.AddRange(faceVertices);
+        bool invertTriangles = direction == Vector3.down || position.y < 0f;
 
-        if (direction == Vector3.down || position.y < 0f)
+        if (invertTriangles)
         {
-            // Reverse triangle winding order for bottom faces or faces below y = 0
             meshData.triangles.Add(vertexIndex + 2);
             meshData.triangles.Add(vertexIndex + 1);
             meshData.triangles.Add(vertexIndex + 0);
@@ -96,7 +90,6 @@ public class MeshGenerator
         }
         else
         {
-            // Standard triangle winding order
             meshData.triangles.Add(vertexIndex + 0);
             meshData.triangles.Add(vertexIndex + 1);
             meshData.triangles.Add(vertexIndex + 2);
@@ -106,23 +99,19 @@ public class MeshGenerator
             meshData.triangles.Add(vertexIndex + 0);
         }
 
-        // Add UVs for texturing.
         meshData.uvs.AddRange(new Vector2[]
         {
-            new Vector2(0, 0), // Bottom-left
-            new Vector2(0, 1), // Top-left
-            new Vector2(1, 1), // Top-right
-            new Vector2(1, 0)  // Bottom-right
+            new Vector2(0, 0),
+            new Vector2(0, 1),
+            new Vector2(1, 1),
+            new Vector2(1, 0)
         });
 
-        // Calculate normalized height for color evaluation using static min and max heights
         float normalizedHeight = Mathf.InverseLerp(gradientMinHeight, gradientMaxHeight, height);
         normalizedHeight = Mathf.Clamp01(normalizedHeight);
 
-        // Get the color from the gradient
         Color vertexColor = terrainGradient.Evaluate(normalizedHeight);
 
-        // Add vertex colors
         meshData.colors.Add(vertexColor);
         meshData.colors.Add(vertexColor);
         meshData.colors.Add(vertexColor);
@@ -136,7 +125,6 @@ public class MeshGenerator
 
         if (direction == Vector3.up)
         {
-            // Top face.
             faceVertices[0] = position + new Vector3(0, s, 0);
             faceVertices[1] = position + new Vector3(0, s, s);
             faceVertices[2] = position + new Vector3(s, s, s);
@@ -144,7 +132,6 @@ public class MeshGenerator
         }
         else if (direction == Vector3.down)
         {
-            // Bottom face.
             faceVertices[0] = position + new Vector3(0, 0, s);
             faceVertices[1] = position + new Vector3(0, 0, 0);
             faceVertices[2] = position + new Vector3(s, 0, 0);
@@ -152,7 +139,6 @@ public class MeshGenerator
         }
         else if (direction == Vector3.left)
         {
-            // Left face.
             faceVertices[0] = position + new Vector3(0, 0, 0);
             faceVertices[1] = position + new Vector3(0, 0, s);
             faceVertices[2] = position + new Vector3(0, s, s);
@@ -160,7 +146,6 @@ public class MeshGenerator
         }
         else if (direction == Vector3.right)
         {
-            // Right face.
             faceVertices[0] = position + new Vector3(s, 0, s);
             faceVertices[1] = position + new Vector3(s, 0, 0);
             faceVertices[2] = position + new Vector3(s, s, 0);
@@ -168,7 +153,6 @@ public class MeshGenerator
         }
         else if (direction == Vector3.forward)
         {
-            // Front face.
             faceVertices[0] = position + new Vector3(0, 0, s);
             faceVertices[1] = position + new Vector3(s, 0, s);
             faceVertices[2] = position + new Vector3(s, s, s);
@@ -176,7 +160,6 @@ public class MeshGenerator
         }
         else if (direction == Vector3.back)
         {
-            // Back face.
             faceVertices[0] = position + new Vector3(s, 0, 0);
             faceVertices[1] = position + new Vector3(0, 0, 0);
             faceVertices[2] = position + new Vector3(0, s, 0);
@@ -192,7 +175,6 @@ public class MeshGenerator
 
         if (x < 0 || x >= chunkSize || z < 0 || z >= chunkSize)
         {
-            // Neighbor is outside the chunk; face is visible.
             return true;
         }
 
@@ -200,14 +182,10 @@ public class MeshGenerator
         int neighborStartY = Mathf.FloorToInt(Mathf.Min(0, neighborHeight));
         int neighborEndY = Mathf.FloorToInt(Mathf.Max(0, neighborHeight));
 
-        // Face is visible if there is a difference in heights between current block and neighbor
         return y < neighborStartY || y > neighborEndY;
     }
 }
 
-/// <summary>
-/// Contains data for constructing the mesh, including vertices, triangles, UVs, and colors.
-/// </summary>
 public class MeshData
 {
     public List<Vector3> vertices = new List<Vector3>();
