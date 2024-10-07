@@ -76,9 +76,8 @@ public class MeshGenerator
         int vertexIndex = meshData.vertices.Count;
 
         meshData.vertices.AddRange(faceVertices);
-        bool invertTriangles = direction == Vector3.down;
 
-        if (invertTriangles)
+        if (direction == Vector3.down || direction == Vector3.back || direction == Vector3.left)
         {
             meshData.triangles.Add(vertexIndex + 2);
             meshData.triangles.Add(vertexIndex + 1);
