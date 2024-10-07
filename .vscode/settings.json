@@ -1,3 +1,21 @@
 {
-    "vstuc.refreshOnSave": true
+    "vstuc.refreshOnSave": true,
+    "files.exclude": {
+        "**/*.meta": true,
+        "**/*.asset": true,
+        "**/*.blend": true,
+        "**/*.fbx": true,
+        "**/*.controller": true,
+        "**/*.mat": true,
+        "**/*.prefab": true,
+        "**/*.unity": true,
+        "**/*.mask": true,
+        "**/*.sln": true,
+        "**/*.csproj": true,
+        "**/Temp": true,
+        "**/Library": true,
+        "**/Logs": true,
+        "**/UserSettings": true
+    },
+    
 }

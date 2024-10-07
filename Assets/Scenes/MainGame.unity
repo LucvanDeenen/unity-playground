@@ -475,8 +475,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1844900041}
-  - component: {fileID: 1844900040}
   - component: {fileID: 1844900042}
+  - component: {fileID: 1844900047}
   - component: {fileID: 1844900045}
   - component: {fileID: 1844900043}
   - component: {fileID: 1844900044}
@@ -488,34 +488,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1844900040
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1844900039}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 91064759364803f488913c99cf93c41d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  player: {fileID: 775550245}
-  chunkSize: 32
-  renderDistance: 12
-  voxelScale: 0.75
-  seed: 42
-  heightMultiplier: 15
-  noiseScale: 0.005
-  octaves: 6
-  persistence: 0.1
-  lacunarity: 5
-  voxelMaterial: {fileID: 2100000, guid: 7c480906a069a8a4b9b111d94052f14d, type: 2}
-  foliageSpawner: {fileID: 1844900043}
-  boulderSpawner: {fileID: 1844900044}
-  treeSpawner: {fileID: 1844900046}
-  placementManager: {fileID: 1844900045}
-  noiseMapTexture: {fileID: 0}
 --- !u!4 &1844900041
 Transform:
   m_ObjectHideFlags: 0
@@ -574,8 +546,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   boulderPrefab: {fileID: 919132149155446097, guid: c2c2847243da7de4987a2d0059ad4436, type: 3}
-  spawnChance: 0.05
-  heightRange: {x: 0, y: 40}
+  spawnChance: 0.1
+  heightRange: {x: 0, y: 100}
   boulderSpacing: 10
   minDistanceBetweenBoulders: 5
   placementManager: {fileID: 1844900045}
@@ -606,9 +578,68 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   treePrefabs:
   - {fileID: 919132149155446097, guid: a243a90195e4e784e8642987a72e596a, type: 3}
-  spawnChance: 0.2
+  spawnChance: 0.25
   heightRange: {x: 5, y: 50}
   minDistanceBetweenTrees: 10
+  placementManager: {fileID: 1844900045}
+--- !u!114 &1844900047
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1844900039}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86e90fb11b5d3c145add0acf0710ea33, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gradientMinHeight: 0
+  gradientMaxHeight: 100
+  player: {fileID: 775550245}
+  chunkSize: 32
+  renderDistance: 5
+  voxelScale: 0.75
+  seed: 42
+  heightMultiplier: 15
+  noiseScale: 0.005
+  octaves: 6
+  persistence: 0.1
+  lacunarity: 5
+  voxelMaterial: {fileID: 2100000, guid: 7c480906a069a8a4b9b111d94052f14d, type: 2}
+  terrainGradient:
+    serializedVersion: 2
+    key0: {r: 1, g: 0.9901909, b: 0.023584902, a: 1}
+    key1: {r: 0.13573885, g: 1, b: 0, a: 1}
+    key2: {r: 0.6509434, g: 0.54199886, b: 0.31626025, a: 0}
+    key3: {r: 0.5283019, g: 0.5283019, b: 0.5283019, a: 0}
+    key4: {r: 1, g: 1, b: 1, a: 0}
+    key5: {r: 0, g: 0, b: 0, a: 0}
+    key6: {r: 0, g: 0, b: 0, a: 0}
+    key7: {r: 0, g: 0, b: 0, a: 0}
+    ctime0: 0
+    ctime1: 20046
+    ctime2: 36430
+    ctime3: 54741
+    ctime4: 65535
+    ctime5: 0
+    ctime6: 0
+    ctime7: 0
+    atime0: 0
+    atime1: 65535
+    atime2: 0
+    atime3: 0
+    atime4: 0
+    atime5: 0
+    atime6: 0
+    atime7: 0
+    m_Mode: 0
+    m_ColorSpace: -1
+    m_NumColorKeys: 5
+    m_NumAlphaKeys: 2
+  foliageSpawner: {fileID: 1844900043}
+  boulderSpawner: {fileID: 1844900044}
+  treeSpawner: {fileID: 1844900046}
   placementManager: {fileID: 1844900045}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
