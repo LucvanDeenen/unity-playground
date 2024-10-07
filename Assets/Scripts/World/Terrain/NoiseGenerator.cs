@@ -11,6 +11,7 @@ public class NoiseGenerator
     private float lacunarity = 5f;
     private int octaves = 6;
     private float heightMultiplier = 15f;
+    private float baseHeight = 100f;
 
     private System.Random prng;
     private float offsetX;
@@ -59,7 +60,7 @@ public class NoiseGenerator
                 }
 
                 // Apply height multiplier and add baseHeight.
-                float heightValue = noiseHeight * heightMultiplier;
+                float heightValue = noiseHeight * heightMultiplier + baseHeight;
                 heightMap[x, z] = heightValue;
             }
         }

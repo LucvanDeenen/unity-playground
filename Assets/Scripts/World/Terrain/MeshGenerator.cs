@@ -3,8 +3,8 @@ using System.Collections.Generic;
 
 public class MeshGenerator
 {
-    private float gradientMinHeight = 0f;
-    private float gradientMaxHeight = 100f;
+    private float gradientMinHeight = 50f;
+    private float gradientMaxHeight = 150f;
 
     private Gradient terrainGradient;
     private float voxelScale;
@@ -34,16 +34,19 @@ public class MeshGenerator
                     Vector3 blockPosition = new Vector3(x, y, z) * voxelScale;
                     float blockHeight = y * voxelScale;
 
+                    // Top face (only for the topmost block).
                     if (y == Mathf.FloorToInt(columnHeight))
                     {
                         AddVoxelFace(meshData, blockPosition, Vector3.up, blockHeight + voxelScale);
                     }
 
+                    // Bottom face (only for the bottommost block).
                     if (y == startY)
                     {
                         AddVoxelFace(meshData, blockPosition, Vector3.down, blockHeight);
                     }
 
+                    // Side faces.
                     if (IsFaceVisible(heightMap, x - 1, z, y))
                     {
                         AddVoxelFace(meshData, blockPosition, Vector3.left, blockHeight);
@@ -76,28 +79,15 @@ public class MeshGenerator
         int vertexIndex = meshData.vertices.Count;
 
         meshData.vertices.AddRange(faceVertices);
-        bool invertTriangles = direction == Vector3.down;
 
-        if (invertTriangles)
-        {
-            meshData.triangles.Add(vertexIndex + 2);
-            meshData.triangles.Add(vertexIndex + 1);
-            meshData.triangles.Add(vertexIndex + 0);
+        // Check for inversion based on direction and position.y
+        meshData.triangles.Add(vertexIndex + 0);
+        meshData.triangles.Add(vertexIndex + 1);
+        meshData.triangles.Add(vertexIndex + 2);
 
-            meshData.triangles.Add(vertexIndex + 0);
-            meshData.triangles.Add(vertexIndex + 3);
-            meshData.triangles.Add(vertexIndex + 2);
-        }
-        else
-        {
-            meshData.triangles.Add(vertexIndex + 0);
-            meshData.triangles.Add(vertexIndex + 1);
-            meshData.triangles.Add(vertexIndex + 2);
-
-            meshData.triangles.Add(vertexIndex + 2);
-            meshData.triangles.Add(vertexIndex + 3);
-            meshData.triangles.Add(vertexIndex + 0);
-        }
+        meshData.triangles.Add(vertexIndex + 2);
+        meshData.triangles.Add(vertexIndex + 3);
+        meshData.triangles.Add(vertexIndex + 0);
 
         meshData.uvs.AddRange(new Vector2[]
         {
