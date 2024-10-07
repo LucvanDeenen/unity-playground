@@ -32,6 +32,18 @@ public class NoiseGenerator
         offsetZ = prng.Next(-100000, 100000);
     }
 
+    public float GenerateSmoothNoise(float x, float z)
+    {
+        // Use different noise parameters for smoother terrain
+        float frequency = 0.02f; 
+        float amplitude = 20f;   
+
+        // Implement your noise function here
+        float noiseValue = Mathf.PerlinNoise(x * frequency, z * frequency) * amplitude;
+
+        return noiseValue;
+    }
+    
     public float[,] GenerateHeightMap(int width, int height, Vector2Int chunkCoord, int chunkSize)
     {
         float[,] heightMap = new float[width, height];

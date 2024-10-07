@@ -19,10 +19,9 @@ public class StartingTerrainManager : MonoBehaviour
     public List<Spawner> spawners = new List<Spawner>();
 
     private Dictionary<Vector2Int, TerrainChunk> chunkDictionary = new Dictionary<Vector2Int, TerrainChunk>();
-    private Vector2Int lastPlayerChunkCoord;
 
     private float voxelScale = 0.75f;
-    private int renderDistance = 3;
+    private int renderDistance = 2;
     private int chunkSize = 32;
 
     private ObjectPlacementManager placementManager;
@@ -55,7 +54,7 @@ public class StartingTerrainManager : MonoBehaviour
         lastPlayerChunkCoord = GetChunkCoordFromPosition(player.position);
         UpdateChunks();
     }
-    
+
     void UpdateChunks()
     {
         Vector2Int playerChunkCoord = GetChunkCoordFromPosition(player.position);
@@ -100,16 +99,36 @@ public class StartingTerrainManager : MonoBehaviour
         // Generate height map as float[,]
         float[,] heightMapFloat = noiseGenerator.GenerateHeightMap(chunk.chunkSize + 1, chunk.chunkSize + 1, chunk.chunkCoord, chunk.chunkSize);
 
-        // Check if the chunk is within a 2x2 tile radius of the player
-        Vector2Int playerChunkCoord = lastPlayerChunkCoord;
-        if (Mathf.Abs(chunk.chunkCoord.x - playerChunkCoord.x) <= 1 && Mathf.Abs(chunk.chunkCoord.y - playerChunkCoord.y) <= 1)
+        // Adjust heights to create cliffs around lowered area and smooth terrain at the bottom
+        float lowerRadius = 35f;      // Radius of lowered area
+        float cliffWidth = 2f;        // Width of the cliff (transition area)
+        float heightOffset = 20f;     // Height offset for the lowered area
+
+        for (int x = 0; x <= chunk.chunkSize; x++)
         {
-            for (int x = 0; x <= chunk.chunkSize; x++)
+            for (int z = 0; z <= chunk.chunkSize; z++)
             {
-                for (int z = 0; z <= chunk.chunkSize; z++)
+                // Compute world position
+                float worldX = (chunk.chunkCoord.x * chunk.chunkSize + x) * voxelScale;
+                float worldZ = (chunk.chunkCoord.y * chunk.chunkSize + z) * voxelScale;
+
+                float dx = worldX - player.position.x;
+                float dz = worldZ - player.position.z;
+                float distance = Mathf.Sqrt(dx * dx + dz * dz);
+
+                if (distance <= lowerRadius)
                 {
-                    heightMapFloat[x, z] -= 50;
+                    float smoothNoise = noiseGenerator.GenerateSmoothNoise(worldX, worldZ);
+                    heightMapFloat[x, z] = smoothNoise + heightOffset;
                 }
+                else if (distance <= lowerRadius + cliffWidth)
+                {
+                    // Create a steep transition (cliff)
+                    float t = (distance - lowerRadius) / cliffWidth;
+                    float loweredHeight = noiseGenerator.GenerateSmoothNoise(worldX, worldZ) + heightOffset;
+                    heightMapFloat[x, z] = Mathf.Lerp(loweredHeight, heightMapFloat[x, z], t);
+                }
+                // Else, keep the original height
             }
         }
 
@@ -123,7 +142,7 @@ public class StartingTerrainManager : MonoBehaviour
             }
         }
 
-        // Generate mesh data using the float[,] heightMap
+        // Generate mesh data using the adjusted heightMap
         MeshData meshData = meshGenerator.GenerateMeshData(heightMapFloat);
 
         // Update chunk mesh
@@ -138,6 +157,8 @@ public class StartingTerrainManager : MonoBehaviour
             }
         }
     }
+
+
 
     Vector2Int GetChunkCoordFromPosition(Vector3 position)
     {
