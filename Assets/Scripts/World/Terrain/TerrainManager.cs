@@ -2,11 +2,10 @@ using UnityEngine;
 using System.Collections.Generic;
 
 /// <summary>
-/// Manages terrain chunks around the player.
+/// Abstract base class for managing terrain chunks around the player.
 /// </summary>
-public class TerrainManager : MonoBehaviour
+public abstract class TerrainManager : MonoBehaviour
 {
-
     [Header("Player Settings")]
     public Transform player;
 
@@ -19,18 +18,18 @@ public class TerrainManager : MonoBehaviour
     [Header("Spawners")]
     public List<Spawner> spawners = new List<Spawner>();
 
-    private Dictionary<Vector2Int, TerrainChunk> chunkDictionary = new Dictionary<Vector2Int, TerrainChunk>();
-    private Vector2Int lastPlayerChunkCoord;
+    protected Dictionary<Vector2Int, TerrainChunk> chunkDictionary = new Dictionary<Vector2Int, TerrainChunk>();
+    protected Vector2Int lastPlayerChunkCoord;
 
-    private float voxelScale = 0.75f;
-    private int renderDistance = 5;
-    private int chunkSize = 32;
+    protected float voxelScale = 0.75f;
+    protected int renderDistance = 2;
+    protected int chunkSize = 32;
 
-    private ObjectPlacementManager placementManager;
-    private NoiseGenerator noiseGenerator;
-    private MeshGenerator meshGenerator;
+    protected ObjectPlacementManager placementManager;
+    protected NoiseGenerator noiseGenerator;
+    protected MeshGenerator meshGenerator;
 
-    void Start()
+    protected virtual void Start()
     {
         if (player == null)
         {
@@ -54,20 +53,21 @@ public class TerrainManager : MonoBehaviour
         }
 
         lastPlayerChunkCoord = GetChunkCoordFromPosition(player.position);
+        InitializeChunks();
+    }
+
+    /// <summary>
+    /// Initializes the initial set of chunks.
+    /// </summary>
+    protected virtual void InitializeChunks()
+    {
         UpdateChunks();
     }
 
-    void Update()
-    {
-        Vector2Int currentChunkCoord = GetChunkCoordFromPosition(player.position);
-        if (currentChunkCoord != lastPlayerChunkCoord)
-        {
-            UpdateChunks();
-            lastPlayerChunkCoord = currentChunkCoord;
-        }
-    }
-
-    void UpdateChunks()
+    /// <summary>
+    /// Updates the active terrain chunks based on the player's current position.
+    /// </summary>
+    protected void UpdateChunks()
     {
         Vector2Int playerChunkCoord = GetChunkCoordFromPosition(player.position);
 
@@ -106,40 +106,18 @@ public class TerrainManager : MonoBehaviour
         }
     }
 
-    void GenerateChunk(TerrainChunk chunk)
-    {
-        // Generate height map as float[,]
-        float[,] heightMapFloat = noiseGenerator.GenerateHeightMap(chunk.chunkSize + 1, chunk.chunkSize + 1, chunk.chunkCoord, chunk.chunkSize);
-        bool[,] isCliffArea = new bool[chunk.chunkSize + 1, chunk.chunkSize + 1];
+    /// <summary>
+    /// Abstract method to generate a terrain chunk. Must be implemented by derived classes.
+    /// </summary>
+    /// <param name="chunk">The terrain chunk to generate.</param>
+    protected abstract void GenerateChunk(TerrainChunk chunk);
 
-        // Convert float[,] heightMap to int[,]
-        int[,] heightMapInt = new int[chunk.chunkSize + 1, chunk.chunkSize + 1];
-        for (int x = 0; x <= chunk.chunkSize; x++)
-        {
-            for (int z = 0; z <= chunk.chunkSize; z++)
-            {
-                heightMapInt[x, z] = Mathf.RoundToInt(heightMapFloat[x, z]);
-                isCliffArea[x, z] = false;
-            }
-        }
-
-        // Generate mesh data using the float[,] heightMap
-        MeshData meshData = meshGenerator.GenerateMeshData(heightMapFloat, isCliffArea);
-
-        // Update chunk mesh
-        chunk.UpdateChunkMesh(meshData);
-
-        // Spawn objects using the int[,] heightMap
-        foreach (Spawner spawner in spawners)
-        {
-            if (spawner != null)
-            {
-                spawner.Spawn(chunk.chunkObject, heightMapInt, voxelScale, chunk.chunkSize, chunk.chunkCoord);
-            }
-        }
-    }
-
-    Vector2Int GetChunkCoordFromPosition(Vector3 position)
+    /// <summary>
+    /// Converts a world position to chunk coordinates.
+    /// </summary>
+    /// <param name="position">The world position.</param>
+    /// <returns>The corresponding chunk coordinates.</returns>
+    protected Vector2Int GetChunkCoordFromPosition(Vector3 position)
     {
         int x = Mathf.FloorToInt(position.x / (chunkSize * voxelScale));
         int z = Mathf.FloorToInt(position.z / (chunkSize * voxelScale));

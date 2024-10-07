@@ -18,6 +18,12 @@ public class MeshGenerator
         this.wallColor = wallColor;
     }
 
+    /// <summary>
+    /// Generates mesh data based on the height map and cliff areas.
+    /// </summary>
+    /// <param name="heightMap">Height map data.</param>
+    /// <param name="isCliffArea">Boolean array indicating cliff areas.</param>
+    /// <returns>Generated mesh data.</returns>
     public MeshData GenerateMeshData(float[,] heightMap, bool[,] isCliffArea)
     {
         int chunkSize = heightMap.GetLength(0) - 1;
@@ -89,6 +95,15 @@ public class MeshGenerator
         return meshData;
     }
 
+    /// <summary>
+    /// Adds a voxel face to the mesh data.
+    /// </summary>
+    /// <param name="meshData">The mesh data to modify.</param>
+    /// <param name="position">Position of the voxel.</param>
+    /// <param name="direction">Direction of the face.</param>
+    /// <param name="height">Height of the face.</param>
+    /// <param name="isCliffFace">Indicates if the face is part of a cliff.</param>
+    /// <param name="isTopFace">Indicates if the face is a top face.</param>
     private void AddVoxelFace(MeshData meshData, Vector3 position, Vector3 direction, float height, bool isCliffFace, bool isTopFace)
     {
         Vector3[] faceVertices = GetFaceVertices(position, direction);
@@ -153,6 +168,12 @@ public class MeshGenerator
         }
     }
 
+    /// <summary>
+    /// Retrieves the vertices for a given face direction.
+    /// </summary>
+    /// <param name="position">Position of the voxel.</param>
+    /// <param name="direction">Direction of the face.</param>
+    /// <returns>Array of four vertices.</returns>
     private Vector3[] GetFaceVertices(Vector3 position, Vector3 direction)
     {
         Vector3[] faceVertices = new Vector3[4];
@@ -204,6 +225,14 @@ public class MeshGenerator
         return faceVertices;
     }
 
+    /// <summary>
+    /// Determines if a face should be visible based on neighboring blocks.
+    /// </summary>
+    /// <param name="heightMap">Height map data.</param>
+    /// <param name="x">X-coordinate of the neighbor.</param>
+    /// <param name="z">Z-coordinate of the neighbor.</param>
+    /// <param name="y">Y-coordinate of the current block.</param>
+    /// <returns>True if the face is visible; otherwise, false.</returns>
     private bool IsFaceVisible(float[,] heightMap, int x, int z, int y)
     {
         int chunkSize = heightMap.GetLength(0) - 1;
@@ -221,6 +250,9 @@ public class MeshGenerator
     }
 }
 
+/// <summary>
+/// Represents mesh data for a terrain chunk.
+/// </summary>
 public class MeshData
 {
     public List<Vector3> vertices = new List<Vector3>();

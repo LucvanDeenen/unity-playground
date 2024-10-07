@@ -23,6 +23,10 @@ public class TerrainChunk
         chunkObject.transform.position = new Vector3(chunkCoord.x * chunkSize, 0, chunkCoord.y * chunkSize) * voxelScale;
     }
 
+    /// <summary>
+    /// Updates the mesh of the terrain chunk.
+    /// </summary>
+    /// <param name="meshData">The mesh data to apply.</param>
     public void UpdateChunkMesh(MeshData meshData)
     {
         MeshFilter meshFilter = chunkObject.GetComponent<MeshFilter>();
@@ -57,6 +61,9 @@ public class TerrainChunk
         meshCollider.sharedMesh = mesh;
     }
 
+    /// <summary>
+    /// Destroys the terrain chunk.
+    /// </summary>
     public void DestroyChunk()
     {
         GameObject.Destroy(chunkObject);

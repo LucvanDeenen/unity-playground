@@ -1,31 +1,53 @@
 using UnityEngine;
+using System.Collections.Generic;
 
-public class WorldTerrainManager : MonoBehaviour
+/// <summary>
+/// Manages world terrain chunks around the player, potentially with different terrain features.
+/// </summary>
+public class WorldTerrainManager : TerrainManager
 {
-    // void Start()
-    // {
-    //     if (player == null)
-    //     {
-    //         Debug.LogError("Player reference is not set in TerrainManager.");
-    //         enabled = false;
-    //         return;
-    //     }
+    [Header("World Terrain Settings")]
+    public float lowerRadius = 50f;
+    public float cliffWidth = 3f;
+    public float heightOffset = 25f;
 
-    //     placementManager = GetComponent<ObjectPlacementManager>();
+    protected override void Start()
+    {
+        // Set a different render distance if needed
+        renderDistance = 12;
+        base.Start();
+    }
 
-    //     // Initialize NoiseGenerator and MeshGenerator with parameters
-    //     noiseGenerator = new NoiseGenerator(seed);
-    //     meshGenerator = new MeshGenerator(voxelScale, terrainGradient, wallColor);
+    protected override void GenerateChunk(TerrainChunk chunk)
+    {
+        // Generate isCliffArea as bool[,] and height map as float[,]
+        float[,] heightMapFloat = noiseGenerator.GenerateHeightMap(chunk.chunkSize + 1, chunk.chunkSize + 1, chunk.chunkCoord, chunk.chunkSize);
+        bool[,] isCliffArea = new bool[chunk.chunkSize + 1, chunk.chunkSize + 1];
 
-    //     foreach (Spawner spawner in spawners)
-    //     {
-    //         if (spawner != null)
-    //         {
-    //             spawner.SetPlacementManager(placementManager);
-    //         }
-    //     }
+        // Convert float[,] heightMap to int[,]
+        int[,] heightMapInt = new int[chunk.chunkSize + 1, chunk.chunkSize + 1];
+        for (int x = 0; x <= chunk.chunkSize; x++)
+        {
+            for (int z = 0; z <= chunk.chunkSize; z++)
+            {
+                heightMapInt[x, z] = Mathf.RoundToInt(heightMapFloat[x, z]);
+                isCliffArea[x, z] = false; 
+            }
+        }
 
-    //     lastPlayerChunkCoord = GetChunkCoordFromPosition(player.position);
-    //     UpdateChunks();
-    // }
+        // Generate mesh data using the adjusted heightMap and isCliffArea
+        MeshData meshData = meshGenerator.GenerateMeshData(heightMapFloat, isCliffArea);
+
+        // Update chunk mesh
+        chunk.UpdateChunkMesh(meshData);
+
+        // Spawn objects using the int[,] heightMap
+        foreach (Spawner spawner in spawners)
+        {
+            if (spawner != null)
+            {
+                spawner.Spawn(chunk.chunkObject, heightMapInt, voxelScale, chunk.chunkSize, chunk.chunkCoord);
+            }
+        }
+    }
 }
