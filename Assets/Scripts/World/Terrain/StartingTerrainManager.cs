@@ -2,10 +2,11 @@ using UnityEngine;
 using System.Collections.Generic;
 
 /// <summary>
-/// Manages terrain chunks around the starting player.
+/// Manages terrain chunks around the player.
 /// </summary>
 public class StartingTerrainManager : MonoBehaviour
 {
+
     [Header("Player Settings")]
     public Transform player;
 
@@ -18,10 +19,10 @@ public class StartingTerrainManager : MonoBehaviour
     public List<Spawner> spawners = new List<Spawner>();
 
     private Dictionary<Vector2Int, TerrainChunk> chunkDictionary = new Dictionary<Vector2Int, TerrainChunk>();
-    private Vector3 spawnPoint;
+    private Vector2Int lastPlayerChunkCoord;
 
     private float voxelScale = 0.75f;
-    private int renderDistance = 2;
+    private int renderDistance = 5;
     private int chunkSize = 32;
 
     private ObjectPlacementManager placementManager;
@@ -37,11 +38,7 @@ public class StartingTerrainManager : MonoBehaviour
             return;
         }
 
-        // Set placement manager
         placementManager = GetComponent<ObjectPlacementManager>();
-
-        // Store the player's initial spawn position
-        spawnPoint = player.position;
 
         // Initialize NoiseGenerator and MeshGenerator with parameters
         noiseGenerator = new NoiseGenerator(seed);
@@ -54,9 +51,11 @@ public class StartingTerrainManager : MonoBehaviour
                 spawner.SetPlacementManager(placementManager);
             }
         }
+
+        lastPlayerChunkCoord = GetChunkCoordFromPosition(player.position);
         UpdateChunks();
     }
-
+    
     void UpdateChunks()
     {
         Vector2Int playerChunkCoord = GetChunkCoordFromPosition(player.position);
@@ -72,6 +71,7 @@ public class StartingTerrainManager : MonoBehaviour
 
                 if (!chunkDictionary.ContainsKey(chunkCoord))
                 {
+                    // Generate and store new chunk.
                     TerrainChunk chunk = new TerrainChunk(chunkCoord, chunkSize, voxelScale, transform, voxelMaterial);
                     GenerateChunk(chunk);
                     chunkDictionary.Add(chunkCoord, chunk);
@@ -79,6 +79,7 @@ public class StartingTerrainManager : MonoBehaviour
             }
         }
 
+        // Remove chunks that are no longer within the render distance.
         List<Vector2Int> chunksToRemove = new List<Vector2Int>();
         foreach (var chunk in chunkDictionary)
         {
@@ -96,30 +97,33 @@ public class StartingTerrainManager : MonoBehaviour
 
     void GenerateChunk(TerrainChunk chunk)
     {
-        float[,] heightMap = noiseGenerator.GenerateHeightMap(chunk.chunkSize + 1, chunk.chunkSize + 1, chunk.chunkCoord, chunk.chunkSize);
-        float valleyRadius = 30f;
-        float valleyDepth = 20f;
+        // Generate height map as float[,]
+        float[,] heightMapFloat = noiseGenerator.GenerateHeightMap(chunk.chunkSize + 1, chunk.chunkSize + 1, chunk.chunkCoord, chunk.chunkSize);
 
+        // Convert float[,] heightMap to int[,]
+        int[,] heightMapInt = new int[chunk.chunkSize + 1, chunk.chunkSize + 1];
         for (int x = 0; x <= chunk.chunkSize; x++)
         {
             for (int z = 0; z <= chunk.chunkSize; z++)
             {
-                Vector3 worldPos = new Vector3(chunk.chunkCoord.x * chunk.chunkSize + x, 0, chunk.chunkCoord.y * chunk.chunkSize + z) * voxelScale;
-                float distanceToPlayer = Vector2.Distance(new Vector2(worldPos.x, worldPos.z), new Vector2(player.position.x, player.position.z));
-
-                if (distanceToPlayer <= valleyRadius)
-                {
-                    heightMap[x, z] = Mathf.Lerp(heightMap[x, z], valleyDepth, 1f - (distanceToPlayer / valleyRadius));
-                }
-                else if (distanceToPlayer <= valleyRadius + 3)
-                {
-                    heightMap[x, z] = Mathf.Lerp(heightMap[x, z], valleyDepth, 1f - ((distanceToPlayer - valleyRadius) / 3f));
-                }
+                heightMapInt[x, z] = Mathf.RoundToInt(heightMapFloat[x, z]);
             }
         }
 
-        MeshData meshData = meshGenerator.GenerateMeshData(heightMap);
+        // Generate mesh data using the float[,] heightMap
+        MeshData meshData = meshGenerator.GenerateMeshData(heightMapFloat);
+
+        // Update chunk mesh
         chunk.UpdateChunkMesh(meshData);
+
+        // Spawn objects using the int[,] heightMap
+        foreach (Spawner spawner in spawners)
+        {
+            if (spawner != null)
+            {
+                spawner.Spawn(chunk.chunkObject, heightMapInt, voxelScale, chunk.chunkSize, chunk.chunkCoord);
+            }
+        }
     }
 
     Vector2Int GetChunkCoordFromPosition(Vector3 position)
