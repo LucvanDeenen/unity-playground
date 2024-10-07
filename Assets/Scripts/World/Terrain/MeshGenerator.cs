@@ -76,7 +76,7 @@ public class MeshGenerator
         int vertexIndex = meshData.vertices.Count;
 
         meshData.vertices.AddRange(faceVertices);
-        bool invertTriangles = direction == Vector3.down || position.y < 0f;
+        bool invertTriangles = direction == Vector3.down;
 
         if (invertTriangles)
         {
