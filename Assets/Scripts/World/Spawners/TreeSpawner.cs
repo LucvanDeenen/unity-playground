@@ -3,29 +3,20 @@ using UnityEngine;
 /// <summary>
 /// Handles spawning of trees on the voxel terrain.
 /// </summary>
-public class TreeSpawner : MonoBehaviour
+public class TreeSpawner : Spawner
 {
     [Header("Tree Settings")]
     [Tooltip("The list of tree prefabs to spawn on the terrain.")]
     public GameObject[] treePrefabs;
 
-    [Tooltip("The chance to spawn a tree at a potential location (0 to 1).")]
-    [Range(0f, 1f)]
-    public float spawnChance = 0.1f;
-
-    [Tooltip("The height range for spawning trees.")]
-    public Vector2 heightRange = new Vector2(10f, 35f);
-
-    [Tooltip("Minimum distance between trees and other objects.")]
-    public float minDistanceBetweenTrees = 5f;
-
-    [Tooltip("Reference to the ObjectPlacementManager.")]
-    public ObjectPlacementManager placementManager;
+    private Vector2 heightRange = new Vector2(10f, 35f);
+    private float minDistanceBetweenTrees = 5f;
+    private float spawnChance = 0.1f;
 
     /// <summary>
     /// Spawns trees on the given chunk.
     /// </summary>
-    public void SpawnTrees(GameObject chunkObject, int[,] heightMap, float voxelScale, int chunkSize, Vector2Int chunkCoord)
+    public override void Spawn(GameObject chunkObject, int[,] heightMap, float voxelScale, int chunkSize, Vector2Int chunkCoord)
     {
         if (treePrefabs == null || treePrefabs.Length == 0)
         {
@@ -62,7 +53,7 @@ public class TreeSpawner : MonoBehaviour
                     if (worldY >= heightRange.x && worldY <= heightRange.y)
                     {
                         // Position in world space
-                        Vector3 position = new Vector3(x * voxelScale, worldY, z * voxelScale) + chunkPosition;
+                        Vector3 position = new Vector3(worldX, worldY, worldZ);
 
                         // Check if position is available
                         if (placementManager.IsPositionAvailable(position, minDistanceBetweenTrees))
@@ -70,11 +61,10 @@ public class TreeSpawner : MonoBehaviour
                             // Randomly select a tree prefab
                             GameObject treePrefab = treePrefabs[Random.Range(0, treePrefabs.Length)];
 
-                            // Instantiate tree prefab
-                            GameObject treeInstance = Instantiate(treePrefab, position, Quaternion.identity, chunkObject.transform);
+                            // Instantiate tree prefab with constrained rotation
+                            GameObject treeInstance = Instantiate(treePrefab, position, GetConstrainedRotation(), chunkObject.transform);
 
-                            // Optionally, adjust rotation and scale for variation
-                            treeInstance.transform.Rotate(-90f, Random.Range(0f, 360f), 0f);
+                            // Optionally, adjust scale for variation
                             float scaleVariation = Random.Range(0.9f, 1.1f);
                             treeInstance.transform.localScale *= scaleVariation;
 

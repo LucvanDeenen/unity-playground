@@ -3,29 +3,21 @@ using UnityEngine;
 /// <summary>
 /// Handles spawning of foliage (e.g., grass) on the voxel terrain.
 /// </summary>
-public class FoliageSpawner : MonoBehaviour
+public class FoliageSpawner : Spawner
 {
     [Header("Foliage Settings")]
     [Tooltip("The grass prefab to spawn on the terrain.")]
     public GameObject grassPrefab;
 
-    [Tooltip("The density of grass per chunk.")]
-    [Range(0, 500)]
-    public int grassDensity = 5;
-
-    [Tooltip("The height range for spawning grass (e.g., plains).")]
-    public Vector2 heightRange = new Vector2(5f, 40f);
-
-    [Tooltip("Minimum distance between grass and other objects.")]
-    public float minDistanceBetweenGrass = 1f;
-
-    [Tooltip("Reference to the ObjectPlacementManager.")]
-    public ObjectPlacementManager placementManager;
+    private Vector2 heightRange = new Vector2(5f, 40f);
+    private float minDistanceBetweenGrass = 2f;
+    private int grassDensity = 2;
+    
 
     /// <summary>
     /// Spawns grass on the given chunk.
     /// </summary>
-    public void SpawnGrass(GameObject chunkObject, int[,] heightMap, float voxelScale, int chunkSize)
+    public override void Spawn(GameObject chunkObject, int[,] heightMap, float voxelScale, int chunkSize, Vector2Int chunkCoord)
     {
         if (grassPrefab == null)
         {

@@ -478,9 +478,9 @@ GameObject:
   - component: {fileID: 1844900042}
   - component: {fileID: 1844900047}
   - component: {fileID: 1844900045}
-  - component: {fileID: 1844900043}
-  - component: {fileID: 1844900044}
-  - component: {fileID: 1844900046}
+  - component: {fileID: 1844900050}
+  - component: {fileID: 1844900049}
+  - component: {fileID: 1844900048}
   m_Layer: 0
   m_Name: Terrain
   m_TagString: Untagged
@@ -516,41 +516,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   checkInterval: 0.5
---- !u!114 &1844900043
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1844900039}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 06e20ff3c2506d04396f4251eb01086d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  grassPrefab: {fileID: 919132149155446097, guid: 7ce7b2bfdb4e4f24a8184f3f1b4e1d0b, type: 3}
-  grassDensity: 2
-  heightRange: {x: 0, y: 30}
-  minDistanceBetweenGrass: 1
-  placementManager: {fileID: 1844900045}
---- !u!114 &1844900044
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1844900039}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d71cd79aab2bc714f8ceabaaa940f4da, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  boulderPrefab: {fileID: 919132149155446097, guid: c2c2847243da7de4987a2d0059ad4436, type: 3}
-  spawnChance: 0.1
-  heightRange: {x: 0, y: 100}
-  boulderSpacing: 10
-  minDistanceBetweenBoulders: 5
-  placementManager: {fileID: 1844900045}
 --- !u!114 &1844900045
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -564,24 +529,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cellSize: 5
---- !u!114 &1844900046
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1844900039}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d7911cc4a7e2c6b4591d02916bb3db09, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  treePrefabs:
-  - {fileID: 919132149155446097, guid: a243a90195e4e784e8642987a72e596a, type: 3}
-  spawnChance: 0.25
-  heightRange: {x: 5, y: 50}
-  minDistanceBetweenTrees: 10
-  placementManager: {fileID: 1844900045}
 --- !u!114 &1844900047
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -637,10 +584,61 @@ MonoBehaviour:
     m_ColorSpace: -1
     m_NumColorKeys: 5
     m_NumAlphaKeys: 2
-  foliageSpawner: {fileID: 1844900043}
-  boulderSpawner: {fileID: 1844900044}
-  treeSpawner: {fileID: 1844900046}
+  spawners:
+  - {fileID: 1844900050}
+  - {fileID: 1844900049}
+  - {fileID: 1844900048}
   placementManager: {fileID: 1844900045}
+--- !u!114 &1844900048
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1844900039}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d71cd79aab2bc714f8ceabaaa940f4da, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  boulderPrefab: {fileID: 919132149155446097, guid: c2c2847243da7de4987a2d0059ad4436, type: 3}
+  spawnChance: 0.05
+  heightRange: {x: 10, y: 100}
+  boulderSpacing: 10
+  minDistanceBetweenBoulders: 5
+--- !u!114 &1844900049
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1844900039}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d7911cc4a7e2c6b4591d02916bb3db09, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  treePrefabs:
+  - {fileID: 919132149155446097, guid: a243a90195e4e784e8642987a72e596a, type: 3}
+  spawnChance: 0.25
+  heightRange: {x: 10, y: 35}
+  minDistanceBetweenTrees: 5
+--- !u!114 &1844900050
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1844900039}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06e20ff3c2506d04396f4251eb01086d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  grassPrefab: {fileID: 919132149155446097, guid: 7ce7b2bfdb4e4f24a8184f3f1b4e1d0b, type: 3}
+  grassDensity: 2
+  heightRange: {x: 5, y: 40}
+  minDistanceBetweenGrass: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

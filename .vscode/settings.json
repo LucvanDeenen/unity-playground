@@ -10,12 +10,10 @@
         "**/*.prefab": true,
         "**/*.unity": true,
         "**/*.mask": true,
-        "**/*.sln": true,
-        "**/*.csproj": true,
         "**/Temp": true,
         "**/Library": true,
         "**/Logs": true,
         "**/UserSettings": true
     },
-    
+    "dotnet.defaultSolution": "CuberWorld.sln"
 }

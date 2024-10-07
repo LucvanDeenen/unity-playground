@@ -3,32 +3,21 @@ using UnityEngine;
 /// <summary>
 /// Handles spawning of boulders on the voxel terrain.
 /// </summary>
-public class BoulderSpawner : MonoBehaviour
+public class BoulderSpawner : Spawner
 {
     [Header("Boulder Settings")]
     [Tooltip("The boulder prefab to spawn on the terrain.")]
     public GameObject boulderPrefab;
 
-    [Tooltip("The chance to spawn a boulder at a potential location (0 to 1).")]
-    [Range(0f, 1f)]
-    public float spawnChance = 0.05f;
-
-    [Tooltip("The height range for spawning boulders.")]
-    public Vector2 heightRange = new Vector2(10f, 50f);
-
-    [Tooltip("Spacing between boulders (in world units).")]
-    public float boulderSpacing = 10f;
-
-    [Tooltip("Minimum distance between boulders and other objects.")]
-    public float minDistanceBetweenBoulders = 5f;
-
-    [Tooltip("Reference to the ObjectPlacementManager.")]
-    public ObjectPlacementManager placementManager;
+    private Vector2 heightRange = new Vector2(10f, 150f);
+    private float spawnChance = 0.05f;
+    private float boulderSpacing = 20f;
+    private float minDistanceBetweenBoulders = 5f;
 
     /// <summary>
     /// Spawns boulders on the given chunk.
     /// </summary>
-    public void SpawnBoulders(GameObject chunkObject, int[,] heightMap, float voxelScale, int chunkSize, Vector2Int chunkCoord)
+    public override void Spawn(GameObject chunkObject, int[,] heightMap, float voxelScale, int chunkSize, Vector2Int chunkCoord)
     {
         if (boulderPrefab == null)
         {
@@ -84,8 +73,11 @@ public class BoulderSpawner : MonoBehaviour
                             // Check if position is available
                             if (placementManager.IsPositionAvailable(position, minDistanceBetweenBoulders))
                             {
+                                // Get the constrained rotation
+                                Quaternion rotation = GetConstrainedRotation();
+
                                 // Instantiate boulder prefab
-                                GameObject boulderInstance = Instantiate(boulderPrefab, position, Quaternion.identity, chunkObject.transform);
+                                GameObject boulderInstance = Instantiate(boulderPrefab, position, rotation, chunkObject.transform);
 
                                 // Adjust scale for variation
                                 float scaleVariation = Random.Range(0.9f, 1.1f);
