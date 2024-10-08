@@ -289,6 +289,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1844900041}
+  - component: {fileID: 1844900042}
   m_Layer: 0
   m_Name: Terrain
   m_TagString: Untagged
@@ -311,6 +312,32 @@ Transform:
   m_Children: []
   m_Father: {fileID: 194100627}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1844900042
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1844900039}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fcfc3ca3bdb648540b31cdd8b040af66, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  terrainWidth: 100
+  terrainDepth: 100
+  maxHeight: 20
+  scale: 20
+  heightMultiplier: 5
+  offsetX: 999.1423
+  offsetZ: 582.24554
+  blockPrefab: {fileID: 4812550498668189154, guid: 3c279666f451bd4408f3c58a11a5fbda, type: 3}
+  blockScale: {x: 1, y: 1, z: 1}
+  seed: 42
+  randomOffsetRange: {x: 0, y: 1000}
+  useSeed: 1
+  generateOnStart: 1
+  clearExisting: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

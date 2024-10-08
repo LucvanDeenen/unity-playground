@@ -32,14 +32,6 @@ public class PerlinBlockTerrainGenerator : MonoBehaviour
     // Parent object to hold all blocks (for organization)
     private GameObject terrainParent;
 
-    void Start()
-    {
-        if (generateOnStart)
-        {
-            GenerateTerrain();
-        }
-    }
-
     /// <summary>
     /// Generates the block-based terrain using Perlin noise.
     /// </summary>
@@ -58,9 +50,6 @@ public class PerlinBlockTerrainGenerator : MonoBehaviour
             offsetX = Random.Range(randomOffsetRange.x, randomOffsetRange.y);
             offsetZ = Random.Range(randomOffsetRange.x, randomOffsetRange.y);
         }
-
-        // Create a parent object to organize blocks
-        terrainParent = new GameObject("TerrainBlocks");
 
         // Optional: Clear existing blocks
         if (clearExisting && terrainParent.transform.childCount > 0)
