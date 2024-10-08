@@ -17,6 +17,11 @@ namespace Terrain.Managers
             base.Start();
         }
 
+        void Update()
+        {
+            UpdateChunks();
+        }
+
         protected override void GenerateChunk(TerrainChunk chunk)
         {
             // Generate isCliffArea as bool[,] and height map as float[,]
