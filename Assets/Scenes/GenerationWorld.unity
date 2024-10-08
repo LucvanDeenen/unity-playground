@@ -324,9 +324,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fcfc3ca3bdb648540b31cdd8b040af66, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  terrainWidth: 100
-  terrainDepth: 100
-  maxHeight: 20
+  terrainWidth: 10
+  terrainDepth: 10
+  maxHeight: 100
   scale: 20
   heightMultiplier: 5
   offsetX: 999.1423
