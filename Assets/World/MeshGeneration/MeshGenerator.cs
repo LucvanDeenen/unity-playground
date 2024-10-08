@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-namespace Terrain.MeshGeneration
+namespace World.MeshGeneration
 {
     public class MeshGenerator
     {

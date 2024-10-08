@@ -1,9 +1,9 @@
 using UnityEngine;
-using Terrain.MeshGeneration;
-using Terrain.Chunks;
-using Terrain.Spawners;
+using World.MeshGeneration;
+using World.Chunks;
+using World.Spawners;
 
-namespace Terrain.Managers
+namespace World.Managers
 {
     /// <summary>
     /// Manages world terrain chunks around the player, potentially with different terrain features.

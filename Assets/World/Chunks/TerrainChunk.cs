@@ -1,7 +1,7 @@
 using UnityEngine;
-using Terrain.MeshGeneration;
+using World.MeshGeneration;
 
-namespace Terrain.Chunks
+namespace World.Chunks
 {
     /// <summary>
     /// Represents a single terrain chunk.

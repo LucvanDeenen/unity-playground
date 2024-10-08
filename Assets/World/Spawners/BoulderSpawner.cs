@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Terrain.Spawners
+namespace World.Spawners
 {
     /// <summary>
     /// Handles spawning of boulders on the voxel terrain.

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Terrain.Spawners
+namespace World.Spawners
 {
     /// <summary>
     /// Handles spawning of foliage (e.g., grass) on the voxel terrain.

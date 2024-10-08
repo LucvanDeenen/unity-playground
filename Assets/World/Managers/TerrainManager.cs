@@ -1,12 +1,12 @@
 using UnityEngine;
 using System.Collections.Generic;
-using Terrain.MeshGeneration;
-using Terrain.NoiseGeneration;
-using Terrain.Chunks;
-using Terrain.Spawners;
-using Terrain.Shared;
+using World.MeshGeneration;
+using World.NoiseGeneration;
+using World.Chunks;
+using World.Spawners;
+using World.Shared;
 
-namespace Terrain.Managers
+namespace World.Managers
 {
     /// <summary>
     /// Abstract base class for managing terrain chunks around the player.

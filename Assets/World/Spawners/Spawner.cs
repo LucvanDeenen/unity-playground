@@ -1,7 +1,7 @@
 using UnityEngine;
-using Terrain.Shared;
+using World.Shared;
 
-namespace Terrain.Spawners
+namespace World.Spawners
 {
     /// <summary>
     /// Abstract base class for all spawner types.

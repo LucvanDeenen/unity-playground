@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Terrain.NoiseGeneration
+namespace World.NoiseGeneration
 {
     /// <summary>
     /// Generates noise values for terrain generation.

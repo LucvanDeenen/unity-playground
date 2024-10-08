@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Terrain.Shared
+namespace World.Shared
 {
     /// <summary>
     /// Manages object placements to prevent overlaps by keeping track of occupied positions.
