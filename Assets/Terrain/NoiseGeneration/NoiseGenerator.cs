@@ -13,7 +13,7 @@ namespace Terrain.NoiseGeneration
         private float lacunarity = 2f;
         private int octaves = 4;
         private float heightMultiplier = 15f;
-        private float baseHeight = 100f;
+        private float baseHeight = 20f;
     
         // Noise settings for valley terrain
         private float valleyNoiseScale = 0.005f;

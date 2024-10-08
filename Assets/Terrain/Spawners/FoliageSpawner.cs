@@ -11,9 +11,9 @@ namespace Terrain.Spawners
         [Tooltip("The grass prefab to spawn on the terrain.")]
         public GameObject grassPrefab;
 
-        private Vector2 heightRange = new Vector2(105f, 140f);
+        private Vector2 heightRange = new Vector2(5f, 40f);
         private float minDistanceBetweenGrass = 2f;
-        private int grassDensity = 5;
+        private int grassDensity = 2;
 
 
         /// <summary>

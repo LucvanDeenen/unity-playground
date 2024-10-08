@@ -11,7 +11,7 @@ namespace Terrain.Spawners
         [Tooltip("The list of tree prefabs to spawn on the terrain.")]
         public GameObject[] treePrefabs;
 
-        private Vector2 heightRange = new Vector2(110f, 150f);
+        private Vector2 heightRange = new Vector2(10f, 50f);
         private float minDistanceBetweenTrees = 10f;
         private float spawnChance = 0.25f;
 

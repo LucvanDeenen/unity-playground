@@ -11,7 +11,7 @@ namespace Terrain.Spawners
         [Tooltip("The boulder prefab to spawn on the terrain.")]
         public GameObject boulderPrefab;
 
-        private Vector2 heightRange = new Vector2(110f, 250f);
+        private Vector2 heightRange = new Vector2(10f, 150f);
         private float spawnChance = 0.05f;
         private float boulderSpacing = 20f;
         private float minDistanceBetweenBoulders = 5f;

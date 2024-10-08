@@ -532,19 +532,19 @@ MonoBehaviour:
   voxelMaterial: {fileID: 2100000, guid: 7c480906a069a8a4b9b111d94052f14d, type: 2}
   terrainGradient:
     serializedVersion: 2
-    key0: {r: 1, g: 0.9901909, b: 0.023584902, a: 1}
-    key1: {r: 0.13573885, g: 1, b: 0, a: 1}
-    key2: {r: 0.6509434, g: 0.54199886, b: 0.31626025, a: 0}
-    key3: {r: 0.5283019, g: 0.5283019, b: 0.5283019, a: 0}
-    key4: {r: 1, g: 1, b: 1, a: 0}
+    key0: {r: 0.13573885, g: 1, b: 0, a: 1}
+    key1: {r: 0.6509434, g: 0.54199886, b: 0.31626025, a: 1}
+    key2: {r: 0.5283019, g: 0.5283019, b: 0.5283019, a: 0}
+    key3: {r: 1, g: 1, b: 1, a: 0}
+    key4: {r: 0, g: 0, b: 0, a: 0}
     key5: {r: 0, g: 0, b: 0, a: 0}
     key6: {r: 0, g: 0, b: 0, a: 0}
     key7: {r: 0, g: 0, b: 0, a: 0}
     ctime0: 0
-    ctime1: 20046
-    ctime2: 36430
-    ctime3: 54741
-    ctime4: 65535
+    ctime1: 36430
+    ctime2: 54741
+    ctime3: 65535
+    ctime4: 0
     ctime5: 0
     ctime6: 0
     ctime7: 0
@@ -558,7 +558,7 @@ MonoBehaviour:
     atime7: 0
     m_Mode: 0
     m_ColorSpace: -1
-    m_NumColorKeys: 5
+    m_NumColorKeys: 4
     m_NumAlphaKeys: 2
   wallColor: {r: 0.5, g: 0.3, b: 0.2, a: 1}
   spawners:
