@@ -1,0 +1,33 @@
+using UnityEngine;
+using System.Collections.Generic;
+
+public class ObjectPool<T> where T : class
+{
+    private readonly Stack<T> pool = new Stack<T>();
+    private readonly System.Func<T> createFunc;
+    private readonly System.Action<T> resetAction;
+
+    public ObjectPool(System.Func<T> createFunc, System.Action<T> resetAction = null)
+    {
+        this.createFunc = createFunc;
+        this.resetAction = resetAction;
+    }
+
+    public T GetObject()
+    {
+        if (pool.Count > 0)
+        {
+            return pool.Pop();
+        }
+        else
+        {
+            return createFunc();
+        }
+    }
+
+    public void ReturnObject(T obj)
+    {
+        resetAction?.Invoke(obj);
+        pool.Push(obj);
+    }
+}
