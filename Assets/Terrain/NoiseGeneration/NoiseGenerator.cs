@@ -9,9 +9,9 @@ namespace Terrain.NoiseGeneration
     {
         // Noise settings for regular terrain
         private float noiseScale = 0.005f;
-        private float persistence = 0.1f;
-        private float lacunarity = 5f;
-        private int octaves = 6;
+        private float persistence = 0.5f;
+        private float lacunarity = 2f;
+        private int octaves = 4;
         private float heightMultiplier = 15f;
         private float baseHeight = 100f;
     
