@@ -1,9 +1,11 @@
 using UnityEngine;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace World.MeshGeneration
 {
+    /// <summary>
+    /// Generates mesh data from a height map.
+    /// </summary>
     public class MeshGenerator
     {
         private float gradientMinHeight = 50f;
@@ -21,9 +23,8 @@ namespace World.MeshGeneration
             this.wallColor = wallColor;
         }
 
-
         /// <summary>
-        /// Generates mesh data based on the height map and cliff areas.
+        /// Generates mesh data based on the height map.
         /// </summary>
         /// <param name="heightMap">Height map data.</param>
         /// <returns>Generated mesh data.</returns>
@@ -48,12 +49,12 @@ namespace World.MeshGeneration
 
                         if (y == startY)
                         {
-                            AddVoxelFace(meshData, blockPosition, Vector3.up, blockHeight + voxelScale, true);
+                            AddVoxelFace(meshData, blockPosition, Vector3.down, blockHeight + voxelScale, true);
                         }
 
                         if (y == endY)
                         {
-                            AddVoxelFace(meshData, blockPosition, Vector3.down, blockHeight, false);
+                            AddVoxelFace(meshData, blockPosition, Vector3.up, blockHeight, false);
                         }
 
                         // Side faces.
@@ -148,13 +149,15 @@ namespace World.MeshGeneration
 
             if (direction == Vector3.up)
             {
+                // Top face.
                 faceVertices[0] = position + new Vector3(0, s, 0);
-                faceVertices[1] = position + new Vector3(0, s, s);
+                faceVertices[1] = position + new Vector3(s, s, 0);
                 faceVertices[2] = position + new Vector3(s, s, s);
-                faceVertices[3] = position + new Vector3(s, s, 0);
+                faceVertices[3] = position + new Vector3(0, s, s);
             }
             else if (direction == Vector3.down)
             {
+                // Bottom face.
                 faceVertices[0] = position + new Vector3(0, 0, s);
                 faceVertices[1] = position + new Vector3(0, 0, 0);
                 faceVertices[2] = position + new Vector3(s, 0, 0);
@@ -162,6 +165,7 @@ namespace World.MeshGeneration
             }
             else if (direction == Vector3.left)
             {
+                // Left face.
                 faceVertices[0] = position + new Vector3(0, 0, 0);
                 faceVertices[1] = position + new Vector3(0, 0, s);
                 faceVertices[2] = position + new Vector3(0, s, s);
@@ -169,6 +173,7 @@ namespace World.MeshGeneration
             }
             else if (direction == Vector3.right)
             {
+                // Right face.
                 faceVertices[0] = position + new Vector3(s, 0, s);
                 faceVertices[1] = position + new Vector3(s, 0, 0);
                 faceVertices[2] = position + new Vector3(s, s, 0);
@@ -176,6 +181,7 @@ namespace World.MeshGeneration
             }
             else if (direction == Vector3.forward)
             {
+                // Front face.
                 faceVertices[0] = position + new Vector3(0, 0, s);
                 faceVertices[1] = position + new Vector3(s, 0, s);
                 faceVertices[2] = position + new Vector3(s, s, s);
@@ -183,6 +189,7 @@ namespace World.MeshGeneration
             }
             else if (direction == Vector3.back)
             {
+                // Back face.
                 faceVertices[0] = position + new Vector3(s, 0, 0);
                 faceVertices[1] = position + new Vector3(0, 0, 0);
                 faceVertices[2] = position + new Vector3(0, s, 0);
@@ -206,6 +213,7 @@ namespace World.MeshGeneration
 
             if (x < 0 || x >= chunkSize || z < 0 || z >= chunkSize)
             {
+                // Neighbor is outside the chunk; face is visible.
                 return true;
             }
 
@@ -213,18 +221,8 @@ namespace World.MeshGeneration
             int neighborStartY = Mathf.FloorToInt(Mathf.Min(0, neighborHeight));
             int neighborEndY = Mathf.FloorToInt(Mathf.Max(0, neighborHeight));
 
+            // Face is visible if there is no neighbor block at the same 'y' level
             return y < neighborStartY || y > neighborEndY;
         }
-    }
-
-    /// <summary>
-    /// Represents mesh data for a terrain chunk.
-    /// </summary>
-    public class MeshData
-    {
-        public List<Vector3> vertices = new List<Vector3>();
-        public List<int> triangles = new List<int>();
-        public List<Vector2> uvs = new List<Vector2>();
-        public List<Color> colors = new List<Color>();
     }
 }
