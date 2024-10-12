@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace World.MeshGeneration
 {
@@ -20,6 +21,7 @@ namespace World.MeshGeneration
             this.wallColor = wallColor;
         }
 
+
         /// <summary>
         /// Generates mesh data based on the height map and cliff areas.
         /// </summary>
@@ -28,17 +30,17 @@ namespace World.MeshGeneration
         public MeshData GenerateMeshData(float[,] heightMap)
         {
             int chunkSize = heightMap.GetLength(0) - 1;
-            MeshData meshData = new MeshData();
+            int lowestY = Mathf.RoundToInt(heightMap.OfType<float>().Min());
 
+            MeshData meshData = new MeshData();
             for (int x = 0; x < chunkSize; x++)
             {
                 for (int z = 0; z < chunkSize; z++)
                 {
                     float columnHeight = heightMap[x, z];
 
-                    int startY = Mathf.FloorToInt(Mathf.Min(0, columnHeight));
+                    int startY = Mathf.FloorToInt(Mathf.Min(lowestY, columnHeight));
                     int endY = Mathf.FloorToInt(Mathf.Max(0, columnHeight));
-
                     for (int y = startY; y <= endY; y++)
                     {
                         Vector3 blockPosition = new Vector3(x, y, z) * voxelScale;

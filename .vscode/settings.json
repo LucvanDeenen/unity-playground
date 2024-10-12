@@ -11,8 +11,6 @@
         "**/*.unity": true,
         "**/*.asmdef": true,
         "**/*.mask": true,
-        "**/*.sln": true,
-        "**/*.csproj": true,
         "**/Temp": true,
         "**/Library": true,
         "**/Logs": true,

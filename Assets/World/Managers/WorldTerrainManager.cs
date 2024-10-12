@@ -13,7 +13,7 @@ namespace World.Managers
         protected override void Start()
         {
             // Set a different render distance if needed
-            renderDistance = 12;
+            renderDistance = 0;
             base.Start();
         }
 
