@@ -39,22 +39,19 @@ namespace World.MeshGeneration
                 {
                     float columnHeight = heightMap[x, z];
 
-                    int startY = Mathf.FloorToInt(Mathf.Min(lowestY, columnHeight));
-                    int endY = Mathf.FloorToInt(Mathf.Max(0, columnHeight));
+                    int startY = Mathf.FloorToInt(lowestY);
+                    int endY = Mathf.FloorToInt(columnHeight);
                     for (int y = startY; y <= endY; y++)
                     {
                         Vector3 blockPosition = new Vector3(x, y, z) * voxelScale;
                         float blockHeight = y * voxelScale;
 
-                        // Top face (only for the topmost block).
-                        if (y == Mathf.FloorToInt(columnHeight))
+                        if (y == startY)
                         {
-                            // Determine if the top face is part of a cliff
                             AddVoxelFace(meshData, blockPosition, Vector3.up, blockHeight + voxelScale, true);
                         }
 
-                        // Bottom face (only for the bottommost block).
-                        if (y == startY)
+                        if (y == endY)
                         {
                             AddVoxelFace(meshData, blockPosition, Vector3.down, blockHeight, false);
                         }
