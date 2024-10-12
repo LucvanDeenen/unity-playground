@@ -21,7 +21,6 @@ namespace World.Managers
         {
             // Generate isCliffArea as bool[,] and height map as float[,]
             float[,] heightMapFloat = noiseGenerator.GenerateHeightMap(chunk.chunkSize + 1, chunk.chunkSize + 1, chunk.chunkCoord, chunk.chunkSize);
-            bool[,] isCliffArea = new bool[chunk.chunkSize + 1, chunk.chunkSize + 1];
 
             // Convert float[,] heightMap to int[,]
             int[,] heightMapInt = new int[chunk.chunkSize + 1, chunk.chunkSize + 1];
@@ -30,12 +29,12 @@ namespace World.Managers
                 for (int z = 0; z <= chunk.chunkSize; z++)
                 {
                     heightMapInt[x, z] = Mathf.RoundToInt(heightMapFloat[x, z]);
-                    isCliffArea[x, z] = false;
                 }
             }
 
             // Generate mesh data using the adjusted heightMap and isCliffArea
-            MeshData meshData = meshGenerator.GenerateMeshData(heightMapFloat, isCliffArea);
+            Debug.Log(heightMapFloat);
+            MeshData meshData = meshGenerator.GenerateMeshData(heightMapFloat);
 
             // Update chunk mesh
             chunk.UpdateChunkMesh(meshData);

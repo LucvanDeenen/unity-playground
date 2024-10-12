@@ -24,9 +24,8 @@ namespace World.MeshGeneration
         /// Generates mesh data based on the height map and cliff areas.
         /// </summary>
         /// <param name="heightMap">Height map data.</param>
-        /// <param name="isCliffArea">Boolean array indicating cliff areas.</param>
         /// <returns>Generated mesh data.</returns>
-        public MeshData GenerateMeshData(float[,] heightMap, bool[,] isCliffArea)
+        public MeshData GenerateMeshData(float[,] heightMap)
         {
             int chunkSize = heightMap.GetLength(0) - 1;
             MeshData meshData = new MeshData();
@@ -40,8 +39,6 @@ namespace World.MeshGeneration
                     int startY = Mathf.FloorToInt(Mathf.Min(0, columnHeight));
                     int endY = Mathf.FloorToInt(Mathf.Max(0, columnHeight));
 
-                    bool currentIsCliff = isCliffArea[x, z];
-
                     for (int y = startY; y <= endY; y++)
                     {
                         Vector3 blockPosition = new Vector3(x, y, z) * voxelScale;
@@ -51,44 +48,34 @@ namespace World.MeshGeneration
                         if (y == Mathf.FloorToInt(columnHeight))
                         {
                             // Determine if the top face is part of a cliff
-                            bool isTopFaceCliff = currentIsCliff;
-                            AddVoxelFace(meshData, blockPosition, Vector3.up, blockHeight + voxelScale, isTopFaceCliff, true);
+                            AddVoxelFace(meshData, blockPosition, Vector3.up, blockHeight + voxelScale, true);
                         }
 
                         // Bottom face (only for the bottommost block).
                         if (y == startY)
                         {
-                            bool isBottomFaceCliff = currentIsCliff;
-                            AddVoxelFace(meshData, blockPosition, Vector3.down, blockHeight, isBottomFaceCliff, false);
+                            AddVoxelFace(meshData, blockPosition, Vector3.down, blockHeight, false);
                         }
 
                         // Side faces.
                         if (IsFaceVisible(heightMap, x - 1, z, y))
                         {
-                            bool neighborIsCliff = (x - 1 >= 0) ? isCliffArea[x - 1, z] : false;
-                            bool isCliffFace = currentIsCliff || neighborIsCliff;
-                            AddVoxelFace(meshData, blockPosition, Vector3.left, blockHeight, isCliffFace, false);
+                            AddVoxelFace(meshData, blockPosition, Vector3.left, blockHeight, false);
                         }
 
                         if (IsFaceVisible(heightMap, x + 1, z, y))
                         {
-                            bool neighborIsCliff = (x + 1 <= chunkSize) ? isCliffArea[x + 1, z] : false;
-                            bool isCliffFace = currentIsCliff || neighborIsCliff;
-                            AddVoxelFace(meshData, blockPosition, Vector3.right, blockHeight, isCliffFace, false);
+                            AddVoxelFace(meshData, blockPosition, Vector3.right, blockHeight, false);
                         }
 
                         if (IsFaceVisible(heightMap, x, z - 1, y))
                         {
-                            bool neighborIsCliff = (z - 1 >= 0) ? isCliffArea[x, z - 1] : false;
-                            bool isCliffFace = currentIsCliff || neighborIsCliff;
-                            AddVoxelFace(meshData, blockPosition, Vector3.back, blockHeight, isCliffFace, false);
+                            AddVoxelFace(meshData, blockPosition, Vector3.back, blockHeight, false);
                         }
 
                         if (IsFaceVisible(heightMap, x, z + 1, y))
                         {
-                            bool neighborIsCliff = (z + 1 <= chunkSize) ? isCliffArea[x, z + 1] : false;
-                            bool isCliffFace = currentIsCliff || neighborIsCliff;
-                            AddVoxelFace(meshData, blockPosition, Vector3.forward, blockHeight, isCliffFace, false);
+                            AddVoxelFace(meshData, blockPosition, Vector3.forward, blockHeight, false);
                         }
                     }
                 }
@@ -104,9 +91,8 @@ namespace World.MeshGeneration
         /// <param name="position">Position of the voxel.</param>
         /// <param name="direction">Direction of the face.</param>
         /// <param name="height">Height of the face.</param>
-        /// <param name="isCliffFace">Indicates if the face is part of a cliff.</param>
         /// <param name="isTopFace">Indicates if the face is a top face.</param>
-        private void AddVoxelFace(MeshData meshData, Vector3 position, Vector3 direction, float height, bool isCliffFace, bool isTopFace)
+        private void AddVoxelFace(MeshData meshData, Vector3 position, Vector3 direction, float height, bool isTopFace)
         {
             Vector3[] faceVertices = GetFaceVertices(position, direction);
             int vertexIndex = meshData.vertices.Count;
@@ -131,39 +117,19 @@ namespace World.MeshGeneration
             });
 
             Color vertexColor;
-
             if (isTopFace)
             {
-                if (isCliffFace)
-                {
-                    // Top face of a cliff: Use wall color
-                    vertexColor = wallColor;
-                }
-                else
-                {
-                    // Top surface: Use terrain gradient
-                    float normalizedHeight = Mathf.InverseLerp(gradientMinHeight, gradientMaxHeight, height);
-                    normalizedHeight = Mathf.Clamp01(normalizedHeight);
-                    vertexColor = terrainGradient.Evaluate(normalizedHeight);
-                }
+                float normalizedHeight = Mathf.InverseLerp(gradientMinHeight, gradientMaxHeight, height);
+                normalizedHeight = Mathf.Clamp01(normalizedHeight);
+                vertexColor = terrainGradient.Evaluate(normalizedHeight);
             }
             else
             {
-                if (isCliffFace)
-                {
-                    // Cliff wall: Use wall color
-                    vertexColor = wallColor;
-                }
-                else
-                {
-                    // Side of normal terrain: Use terrain gradient
-                    float normalizedHeight = Mathf.InverseLerp(gradientMinHeight, gradientMaxHeight, height);
-                    normalizedHeight = Mathf.Clamp01(normalizedHeight);
-                    vertexColor = terrainGradient.Evaluate(normalizedHeight);
-                }
+                float normalizedHeight = Mathf.InverseLerp(gradientMinHeight, gradientMaxHeight, height);
+                normalizedHeight = Mathf.Clamp01(normalizedHeight);
+                vertexColor = terrainGradient.Evaluate(normalizedHeight);
             }
 
-            // Assign the color to all vertices of the face
             for (int i = 0; i < 4; i++)
             {
                 meshData.colors.Add(vertexColor);
