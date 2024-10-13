@@ -46,11 +46,14 @@ namespace World.MeshGeneration
                         Vector3 blockPosition = new Vector3(x, y, z) * voxelScale;
                         float blockHeight = y * voxelScale;
 
+                        // Top face (only for the topmost block).
                         if (y == Mathf.FloorToInt(columnHeight))
                         {
-                            AddVoxelFace(meshData, blockPosition, Vector3.up, blockHeight, true);
+                            // Determine if the top face is part of a cliff
+                            AddVoxelFace(meshData, blockPosition, Vector3.up, blockHeight + voxelScale, true);
                         }
 
+                        // Bottom face (only for the bottommost block).
                         if (y == startY)
                         {
                             AddVoxelFace(meshData, blockPosition, Vector3.down, blockHeight, false);
