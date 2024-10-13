@@ -31,7 +31,7 @@ namespace World.MeshGeneration
         public MeshData GenerateMeshData(float[,] heightMap)
         {
             int chunkSize = heightMap.GetLength(0) - 1;
-            int lowestY = Mathf.RoundToInt(heightMap.OfType<float>().Min());
+            int startY = Mathf.RoundToInt(heightMap.OfType<float>().Min());
 
             MeshData meshData = new MeshData();
             for (int x = 0; x < chunkSize; x++)
@@ -39,20 +39,19 @@ namespace World.MeshGeneration
                 for (int z = 0; z < chunkSize; z++)
                 {
                     float columnHeight = heightMap[x, z];
-
-                    int startY = Mathf.FloorToInt(lowestY);
                     int endY = Mathf.FloorToInt(columnHeight);
+                    
                     for (int y = startY; y <= endY; y++)
                     {
                         Vector3 blockPosition = new Vector3(x, y, z) * voxelScale;
                         float blockHeight = y * voxelScale;
 
-                        if (y == startY)
+                        if (y == Mathf.FloorToInt(columnHeight))
                         {
                             AddVoxelFace(meshData, blockPosition, Vector3.up, blockHeight, true);
                         }
 
-                        if (y == endY)
+                        if (y == startY)
                         {
                             AddVoxelFace(meshData, blockPosition, Vector3.down, blockHeight, false);
                         }
