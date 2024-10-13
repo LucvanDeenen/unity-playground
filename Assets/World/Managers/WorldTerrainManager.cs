@@ -33,7 +33,6 @@ namespace World.Managers
             }
 
             // Generate mesh data using the adjusted heightMap and isCliffArea
-            Debug.Log(heightMapFloat);
             MeshData meshData = meshGenerator.GenerateMeshData(heightMapFloat);
 
             // Update chunk mesh

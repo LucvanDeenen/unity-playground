@@ -49,12 +49,12 @@ namespace World.MeshGeneration
 
                         if (y == startY)
                         {
-                            AddVoxelFace(meshData, blockPosition, Vector3.down, blockHeight + voxelScale, true);
+                            AddVoxelFace(meshData, blockPosition, Vector3.up, blockHeight, true);
                         }
 
                         if (y == endY)
                         {
-                            AddVoxelFace(meshData, blockPosition, Vector3.up, blockHeight, false);
+                            AddVoxelFace(meshData, blockPosition, Vector3.down, blockHeight, false);
                         }
 
                         // Side faces.

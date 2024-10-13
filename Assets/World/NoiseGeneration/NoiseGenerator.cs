@@ -75,7 +75,7 @@ namespace World.NoiseGeneration
                     }
     
                     // Apply height multiplier and add baseHeight
-                    float heightValue = noiseHeight * heightMultiplier;
+                    float heightValue = noiseHeight * heightMultiplier + 30;
                     heightMap[x, z] = heightValue;
                 }
             }
