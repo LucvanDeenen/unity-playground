@@ -8,8 +8,8 @@ namespace World.MeshGeneration
     /// </summary>
     public class MeshGenerator
     {
-        private float gradientMinHeight = 50f;
-        private float gradientMaxHeight = 150f;
+        private float gradientMinHeight = 0f;
+        private float gradientMaxHeight = 100f;
 
         private Gradient terrainGradient;
         private float voxelScale;
@@ -31,7 +31,7 @@ namespace World.MeshGeneration
         public MeshData GenerateMeshData(float[,] heightMap)
         {
             int chunkSize = heightMap.GetLength(0) - 1;
-            int startY = Mathf.RoundToInt(heightMap.OfType<float>().Min());
+            int startY = 0;
 
             MeshData meshData = new MeshData();
             for (int x = 0; x < chunkSize; x++)
@@ -40,7 +40,7 @@ namespace World.MeshGeneration
                 {
                     float columnHeight = heightMap[x, z];
                     int endY = Mathf.FloorToInt(columnHeight);
-                    
+
                     for (int y = startY; y <= endY; y++)
                     {
                         Vector3 blockPosition = new Vector3(x, y, z) * voxelScale;
@@ -100,8 +100,6 @@ namespace World.MeshGeneration
             int vertexIndex = meshData.vertices.Count;
 
             meshData.vertices.AddRange(faceVertices);
-
-            // Define triangles
             meshData.triangles.Add(vertexIndex + 0);
             meshData.triangles.Add(vertexIndex + 1);
             meshData.triangles.Add(vertexIndex + 2);
@@ -151,11 +149,10 @@ namespace World.MeshGeneration
 
             if (direction == Vector3.up)
             {
-                // Top face.
                 faceVertices[0] = position + new Vector3(0, s, 0);
-                faceVertices[1] = position + new Vector3(s, s, 0);
+                faceVertices[1] = position + new Vector3(0, s, s);
                 faceVertices[2] = position + new Vector3(s, s, s);
-                faceVertices[3] = position + new Vector3(0, s, s);
+                faceVertices[3] = position + new Vector3(s, s, 0);
             }
             else if (direction == Vector3.down)
             {

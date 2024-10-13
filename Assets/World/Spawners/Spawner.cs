@@ -1,5 +1,6 @@
 using UnityEngine;
 using World.Shared;
+using World.NoiseGeneration;
 
 namespace World.Spawners
 {
@@ -9,10 +10,16 @@ namespace World.Spawners
     public abstract class Spawner : MonoBehaviour
     {
         protected ObjectPlacementManager placementManager;
+        protected NoiseGenerator noiseGenerator;
 
         public void SetPlacementManager(ObjectPlacementManager manager)
         {
             placementManager = manager;
+        }
+
+        public void SetNoiseGenerator(NoiseGenerator generator)
+        {
+            noiseGenerator = generator;
         }
 
         /// <summary>
@@ -23,10 +30,10 @@ namespace World.Spawners
         /// <summary>
         /// Gets the constrained rotation with z-axis set to 90 degrees.
         /// </summary>
-        protected Quaternion GetConstrainedRotation()
+        protected Quaternion GetConstrainedRotation(System.Random prng)
         {
             // Randomize the y-axis rotation and snap it to the closest multiple of 90 degrees
-            float randomYRotation = Random.Range(0f, 360f);
+            float randomYRotation = (float)prng.NextDouble() * 360f;
             float snappedYRotation = Mathf.Round(randomYRotation / 90f) * 90f;
 
             // Set z-axis rotation to 90 degrees

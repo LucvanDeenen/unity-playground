@@ -56,18 +56,11 @@ namespace World.Managers
                 if (spawner != null)
                 {
                     spawner.SetPlacementManager(placementManager);
+                    spawner.SetNoiseGenerator(noiseGenerator);
                 }
             }
 
             lastPlayerChunkCoord = GetChunkCoordFromPosition(player.position);
-            InitializeChunks();
-        }
-
-        /// <summary>
-        /// Initializes the initial set of chunks.
-        /// </summary>
-        protected virtual void InitializeChunks()
-        {
             UpdateChunks();
         }
 

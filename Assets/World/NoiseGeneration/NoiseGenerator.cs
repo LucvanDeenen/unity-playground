@@ -12,7 +12,7 @@ namespace World.NoiseGeneration
         private float persistence = 0.5f;
         private float lacunarity = 2f;
         private int octaves = 4;
-        private float heightMultiplier = 25f;
+        private float heightMultiplier = 15f;
 
         private System.Random prng;
         private float offsetX;
@@ -67,7 +67,7 @@ namespace World.NoiseGeneration
                         float sampleX = (worldX + offsetX) * noiseScale * frequency;
                         float sampleZ = (worldZ + offsetZ) * noiseScale * frequency;
     
-                        float perlinValue = Mathf.PerlinNoise(sampleX, sampleZ) * 2 - 1;
+                        float perlinValue = Mathf.PerlinNoise(sampleX, sampleZ) * 2;
                         noiseHeight += perlinValue * amplitude;
     
                         amplitude *= persistence;
@@ -75,7 +75,7 @@ namespace World.NoiseGeneration
                     }
     
                     // Apply height multiplier and add baseHeight
-                    float heightValue = noiseHeight * heightMultiplier + 30;
+                    float heightValue = noiseHeight * heightMultiplier;
                     heightMap[x, z] = heightValue;
                 }
             }

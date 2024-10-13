@@ -6,20 +6,24 @@ using World.Spawners;
 namespace World.Managers
 {
     /// <summary>
-    /// Manages world terrain chunks around the player, potentially with different terrain features.
+    /// Manages world terrain chunks around the player.
     /// </summary>
     public class WorldTerrainManager : TerrainManager
     {
         protected override void Start()
         {
-            // Set a different render distance if needed
-            renderDistance = 0;
+            renderDistance = 12;
             base.Start();
+        }
+
+        void Update()
+        {
+            UpdateChunks();
         }
 
         protected override void GenerateChunk(TerrainChunk chunk)
         {
-            // Generate isCliffArea as bool[,] and height map as float[,]
+            // Generate height map
             float[,] heightMapFloat = noiseGenerator.GenerateHeightMap(chunk.chunkSize + 1, chunk.chunkSize + 1, chunk.chunkCoord, chunk.chunkSize);
 
             // Convert float[,] heightMap to int[,]
@@ -32,13 +36,13 @@ namespace World.Managers
                 }
             }
 
-            // Generate mesh data using the adjusted heightMap and isCliffArea
+            // Generate mesh data
             MeshData meshData = meshGenerator.GenerateMeshData(heightMapFloat);
 
             // Update chunk mesh
             chunk.UpdateChunkMesh(meshData);
 
-            // Spawn objects using the int[,] heightMap
+            // Spawn objects
             foreach (Spawner spawner in spawners)
             {
                 if (spawner != null)
