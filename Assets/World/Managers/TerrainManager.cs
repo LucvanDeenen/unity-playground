@@ -32,9 +32,6 @@ namespace World.Managers
         protected int renderDistance = 2;
         protected int chunkSize = 32;
 
-        private float visibilityUpdateInterval = 0.5f;
-        private float timeSinceLastUpdate = 0f;
-
         protected ObjectPlacementManager placementManager;
         protected NoiseGenerator noiseGenerator;
         protected MeshGenerator meshGenerator;
@@ -108,14 +105,9 @@ namespace World.Managers
                 chunkDictionary.Remove(coord);
             }
 
-            timeSinceLastUpdate += Time.deltaTime;
-            if (timeSinceLastUpdate >= visibilityUpdateInterval)
+            foreach (var chunk in chunkDictionary.Values)
             {
-                foreach (var chunk in chunkDictionary.Values)
-                {
-                    chunk.UpdateVisibility(player);
-                }
-                timeSinceLastUpdate = 0f;
+                chunk.UpdateVisibility(player);
             }
         }
 

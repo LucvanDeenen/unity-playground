@@ -15,6 +15,7 @@ namespace World.Chunks
         public Material voxelMaterial;
 
         private Renderer[] renderers;
+        private Collider[] colliders;
         private bool isVisible = true;
         private const float maxViewDistance = 500f;
 
@@ -28,8 +29,6 @@ namespace World.Chunks
             chunkObject = new GameObject($"Chunk_{chunkCoord.x}_{chunkCoord.y}");
             chunkObject.transform.parent = parent;
             chunkObject.transform.position = new Vector3(chunkCoord.x * chunkSize, 0, chunkCoord.y * chunkSize) * voxelScale;
-
-            renderers = chunkObject.GetComponentsInChildren<Renderer>();
         }
 
         /// <summary>
@@ -68,6 +67,10 @@ namespace World.Chunks
                 meshCollider = chunkObject.AddComponent<MeshCollider>();
             }
             meshCollider.sharedMesh = mesh;
+
+            // Update renderers and colliders arrays
+            renderers = chunkObject.GetComponentsInChildren<Renderer>();
+            colliders = chunkObject.GetComponentsInChildren<Collider>();
         }
 
         /// <summary>
@@ -83,7 +86,7 @@ namespace World.Chunks
                 if (isVisible)
                 {
                     isVisible = false;
-                    chunkObject.SetActive(false);
+                    SetRenderersEnabled(false);
                 }
                 return;
             }
@@ -102,7 +105,30 @@ namespace World.Chunks
             if (currentlyVisible != isVisible)
             {
                 isVisible = currentlyVisible;
-                chunkObject.SetActive(isVisible);
+                SetRenderersEnabled(isVisible);
+            }
+        }
+
+        /// <summary>
+        /// Enables or disables the renderers and colliders in the chunk.
+        /// </summary>
+        /// <param name="enabled">Whether to enable or disable the renderers and colliders.</param>
+        private void SetRenderersEnabled(bool enabled)
+        {
+            if (renderers != null)
+            {
+                foreach (var renderer in renderers)
+                {
+                    renderer.enabled = enabled;
+                }
+            }
+
+            if (colliders != null)
+            {
+                foreach (var collider in colliders)
+                {
+                    collider.enabled = enabled;
+                }
             }
         }
 
@@ -115,4 +141,3 @@ namespace World.Chunks
         }
     }
 }
-
