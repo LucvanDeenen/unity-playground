@@ -18,7 +18,9 @@ namespace World.NoiseGeneration
         private float offsetX;
         private float offsetZ;
         private int seed;
-    
+
+        public int Seed => seed; // Add a public property to get the seed
+
         /// <summary>
         /// Initializes the NoiseGenerator with a specific seed.
         /// </summary>
@@ -28,18 +30,17 @@ namespace World.NoiseGeneration
             this.seed = seed;
             InitializeRandomOffsets();
         }
-    
+
         /// <summary>
         /// Initializes random offsets based on the seed to ensure unique terrain generation.
         /// </summary>
         private void InitializeRandomOffsets()
         {
-            // Initialize PRNG for regular terrain
             prng = new System.Random(seed);
             offsetX = prng.Next(-100000, 100000);
             offsetZ = prng.Next(-100000, 100000);
         }
-    
+
         /// <summary>
         /// Generates a height map using multi-octave Perlin noise for regular terrain.
         /// </summary>
@@ -57,30 +58,60 @@ namespace World.NoiseGeneration
                 {
                     int worldX = chunkCoord.x * chunkSize + x;
                     int worldZ = chunkCoord.y * chunkSize + z;
-    
+
                     float amplitude = 1f;
                     float frequency = 1f;
                     float noiseHeight = 0f;
-    
+
                     for (int i = 0; i < octaves; i++)
                     {
                         float sampleX = (worldX + offsetX) * noiseScale * frequency;
                         float sampleZ = (worldZ + offsetZ) * noiseScale * frequency;
-    
+
                         float perlinValue = Mathf.PerlinNoise(sampleX, sampleZ) * 2;
                         noiseHeight += perlinValue * amplitude;
-    
+
                         amplitude *= persistence;
                         frequency *= lacunarity;
                     }
-    
-                    // Apply height multiplier and add baseHeight
+
+                    // Apply height multiplier
                     float heightValue = noiseHeight * heightMultiplier;
                     heightMap[x, z] = heightValue;
                 }
             }
-    
+
             return heightMap;
         }
+
+        /// <summary>
+        /// Gets a normalized noise value between 0 and 1.
+        /// </summary>
+        public float GetNormalizedNoiseValue(float x, float z, float noiseScaleOverride = -1f)
+        {
+            float amplitude = 1f;
+            float frequency = 1f;
+            float noiseHeight = 0f;
+            float maxPossibleHeight = 0f;
+
+            float usedNoiseScale = (noiseScaleOverride > 0f) ? noiseScaleOverride : this.noiseScale;
+
+            for (int i = 0; i < octaves; i++)
+            {
+                float sampleX = (x + offsetX) * usedNoiseScale * frequency;
+                float sampleZ = (z + offsetZ) * usedNoiseScale * frequency;
+
+                float perlinValue = Mathf.PerlinNoise(sampleX, sampleZ);
+                noiseHeight += perlinValue * amplitude;
+
+                maxPossibleHeight += amplitude;
+
+                amplitude *= persistence;
+                frequency *= lacunarity;
+            }
+
+            return noiseHeight / maxPossibleHeight;
+        }
+
     }
 }

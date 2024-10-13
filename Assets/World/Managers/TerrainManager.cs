@@ -96,7 +96,7 @@ namespace World.Managers
             {
                 if (!activeChunks.Contains(chunk.Key))
                 {
-                    chunk.Value.DestroyChunk();
+                    UnloadChunk(chunk.Value);
                     chunksToRemove.Add(chunk.Key);
                 }
             }
@@ -122,6 +122,22 @@ namespace World.Managers
             int x = Mathf.FloorToInt(position.x / (chunkSize * voxelScale));
             int z = Mathf.FloorToInt(position.z / (chunkSize * voxelScale));
             return new Vector2Int(x, z);
+        }
+
+        /// <summary>
+        /// Unloads a terrain chunk and cleans up associated objects.
+        /// </summary>
+        /// <param name="chunk">The terrain chunk to unload.</param>
+        protected void UnloadChunk(TerrainChunk chunk)
+        {
+            // Deregister object positions in the chunk
+            foreach (Transform child in chunk.chunkObject.transform)
+            {
+                placementManager.DeregisterObjectPosition(child.position);
+            }
+
+            // Destroy the chunk object
+            chunk.DestroyChunk();
         }
     }
 }

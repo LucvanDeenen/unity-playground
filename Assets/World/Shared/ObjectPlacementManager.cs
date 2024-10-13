@@ -23,7 +23,6 @@ namespace World.Shared
         public bool IsPositionAvailable(Vector3 position, float minDistance)
         {
             Vector2Int cellCoord = GetCellCoordFromPosition(position);
-            List<Vector3> objectsInCell;
 
             // Check the current cell and neighboring cells.
             for (int x = cellCoord.x - 1; x <= cellCoord.x + 1; x++)
@@ -31,7 +30,7 @@ namespace World.Shared
                 for (int y = cellCoord.y - 1; y <= cellCoord.y + 1; y++)
                 {
                     Vector2Int neighborCell = new Vector2Int(x, y);
-                    if (occupiedCells.TryGetValue(neighborCell, out objectsInCell))
+                    if (occupiedCells.TryGetValue(neighborCell, out List<Vector3> objectsInCell))
                     {
                         foreach (var objPos in objectsInCell)
                         {
@@ -54,15 +53,32 @@ namespace World.Shared
         public void RegisterObjectPosition(Vector3 position)
         {
             Vector2Int cellCoord = GetCellCoordFromPosition(position);
-            List<Vector3> objectsInCell;
 
-            if (!occupiedCells.TryGetValue(cellCoord, out objectsInCell))
+            if (!occupiedCells.TryGetValue(cellCoord, out List<Vector3> objectsInCell))
             {
                 objectsInCell = new List<Vector3>();
                 occupiedCells[cellCoord] = objectsInCell;
             }
 
             objectsInCell.Add(position);
+        }
+
+        /// <summary>
+        /// Deregisters an object position from the occupied cells.
+        /// </summary>
+        /// <param name="position">The world position of the object to remove.</param>
+        public void DeregisterObjectPosition(Vector3 position)
+        {
+            Vector2Int cellCoord = GetCellCoordFromPosition(position);
+
+            if (occupiedCells.TryGetValue(cellCoord, out List<Vector3> objectsInCell))
+            {
+                objectsInCell.Remove(position);
+                if (objectsInCell.Count == 0)
+                {
+                    occupiedCells.Remove(cellCoord);
+                }
+            }
         }
 
         /// <summary>
