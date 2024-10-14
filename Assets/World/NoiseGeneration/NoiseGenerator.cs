@@ -3,7 +3,7 @@ using UnityEngine;
 namespace World.NoiseGeneration
 {
     /// <summary>
-    /// Generates noise values for terrain generation.
+    /// Generates noise values for terrain generation using Unity's Job System.
     /// </summary>
     public class NoiseGenerator
     {
@@ -19,7 +19,7 @@ namespace World.NoiseGeneration
         private float offsetZ;
         private int seed;
 
-        public int Seed => seed; // Add a public property to get the seed
+        public int Seed => seed;
 
         /// <summary>
         /// Initializes the NoiseGenerator with a specific seed.
@@ -41,14 +41,6 @@ namespace World.NoiseGeneration
             offsetZ = prng.Next(-100000, 100000);
         }
 
-        /// <summary>
-        /// Generates a height map using multi-octave Perlin noise for regular terrain.
-        /// </summary>
-        /// <param name="width">Width of the height map.</param>
-        /// <param name="height">Height of the height map.</param>
-        /// <param name="chunkCoord">Chunk coordinates.</param>
-        /// <param name="chunkSize">Size of the chunk.</param>
-        /// <returns>2D array representing the height map.</returns>
         public float[,] GenerateHeightMap(int width, int height, Vector2Int chunkCoord, int chunkSize)
         {
             float[,] heightMap = new float[width, height];
@@ -112,6 +104,5 @@ namespace World.NoiseGeneration
 
             return noiseHeight / maxPossibleHeight;
         }
-
     }
 }
