@@ -1,7 +1,4 @@
 using UnityEngine;
-using Unity.Collections;
-using Unity.Jobs;
-using System;
 
 namespace World.NoiseGeneration
 {
@@ -44,38 +41,6 @@ namespace World.NoiseGeneration
             offsetZ = prng.Next(-100000, 100000);
         }
 
-        /// <summary>
-        /// Schedules a PerlinNoiseJob to generate the height map.
-        /// </summary>
-        /// <param name="width">Width of the height map.</param>
-        /// <param name="height">Height of the height map.</param>
-        /// <param name="chunkCoord">Chunk coordinates.</param>
-        /// <param name="chunkSize">Size of the chunk.</param>
-        /// <param name="heights">NativeArray to store the generated heights.</param>
-        /// <returns>JobHandle for the scheduled job.</returns>
-        public JobHandle ScheduleHeightMapJob(int width, int height, Vector2Int chunkCoord, int chunkSize, NativeArray<float> heights)
-        {
-            PerlinNoiseJob noiseJob = new PerlinNoiseJob
-            {
-                noiseScale = this.noiseScale,
-                persistence = this.persistence,
-                lacunarity = this.lacunarity,
-                octaves = this.octaves,
-                heightMultiplier = this.heightMultiplier,
-                offsetX = this.offsetX,
-                offsetZ = this.offsetZ,
-                width = width,
-                height = height,
-                chunkCoord = chunkCoord,
-                chunkSize = chunkSize,
-                heights = heights
-            };
-
-            // Schedule the job
-            return noiseJob.Schedule();
-        }
-
-        [Obsolete("Only use for testing purposes, please use ScheduleHeightMapJob in final build.")]
         public float[,] GenerateHeightMap(int width, int height, Vector2Int chunkCoord, int chunkSize)
         {
             float[,] heightMap = new float[width, height];
