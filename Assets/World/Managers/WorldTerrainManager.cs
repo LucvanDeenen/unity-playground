@@ -1,6 +1,3 @@
-using World.MeshGeneration;
-using World.Chunks;
-
 namespace World.Managers
 {
     /// <summary>
@@ -8,16 +5,12 @@ namespace World.Managers
     /// </summary>
     public class WorldTerrainManager : TerrainManager
     {
-        protected override void GenerateTerrain(TerrainChunk chunk)
+        protected override void Start()
         {
-            // Generate height map
-            float[,] heightMapFloat = noiseGenerator.GenerateHeightMap(chunk.chunkSize + 1, chunk.chunkSize + 1, chunk.chunkCoord, chunk.chunkSize);
-
-            // Generate mesh data
-            MeshData meshData = meshGenerator.GenerateMeshData(heightMapFloat);
-
-            // Update chunk mesh
-            chunk.UpdateChunkMesh(meshData);
+            renderDistance = 20;
+            base.Start();
+            noiseGenerator.SetHeightMultiplier(25f);
         }
+
     }
 }

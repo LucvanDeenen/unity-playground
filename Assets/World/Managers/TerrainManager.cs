@@ -19,8 +19,8 @@ namespace World.Managers
         [Header("Terrain Settings")]
         [SerializeField] private float voxelScale = 0.75f;
         [SerializeField] private int chunkSize = 32;
-        [SerializeField] protected int renderDistance = 12;
         [SerializeField] protected int seed = 42;
+        [SerializeField] protected int renderDistance = 12;
 
         [Header("Materials")]
         public Material voxelMaterial;
@@ -34,12 +34,6 @@ namespace World.Managers
         protected NoiseGenerator noiseGenerator;
         protected MeshGenerator meshGenerator;
         protected Terrain terrain;
-
-        /// <summary>
-        /// Abstract method to generate a terrain chunk. Must be implemented by derived classes.
-        /// </summary>
-        /// <param name="chunk">The terrain chunk to generate.</param>
-        protected abstract void GenerateTerrain(TerrainChunk chunk);
 
         protected virtual void Start()
         {
@@ -96,6 +90,22 @@ namespace World.Managers
             }
 
             terrain.ValidateChunks(activeChunks, player);
+        }
+
+        /// <summary>
+        /// Abstract method to generate a terrain chunk. Must be implemented by derived classes.
+        /// </summary>
+        /// <param name="chunk">The terrain chunk to generate.</param>
+        protected virtual void GenerateTerrain(TerrainChunk chunk)
+        {
+            // Generate height map
+            float[,] heightMapFloat = noiseGenerator.GenerateHeightMap(chunk.chunkSize + 1, chunk.chunkSize + 1, chunk.chunkCoord, chunk.chunkSize);
+
+            // Generate mesh data
+            MeshData meshData = meshGenerator.GenerateMeshData(heightMapFloat);
+
+            // Update chunk mesh
+            chunk.UpdateChunkMesh(meshData);
         }
     }
 }

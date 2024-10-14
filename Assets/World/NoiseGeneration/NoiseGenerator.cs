@@ -13,13 +13,17 @@ namespace World.NoiseGeneration
         private float lacunarity = 2f;
         private int octaves = 4;
         private float heightMultiplier = 15f;
+        public void SetHeightMultiplier(float heightMultiplier)
+        {
+            this.heightMultiplier = heightMultiplier; 
+        }
 
         private System.Random prng;
         private float offsetX;
         private float offsetZ;
         private int seed;
-
         public int Seed => seed;
+
 
         /// <summary>
         /// Initializes the NoiseGenerator with a specific seed.
