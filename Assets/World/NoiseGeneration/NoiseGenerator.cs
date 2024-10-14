@@ -1,9 +1,12 @@
 using UnityEngine;
+using Unity.Collections;
+using Unity.Jobs;
+using System;
 
 namespace World.NoiseGeneration
 {
     /// <summary>
-    /// Generates noise values for terrain generation.
+    /// Generates noise values for terrain generation using Unity's Job System.
     /// </summary>
     public class NoiseGenerator
     {
@@ -19,7 +22,7 @@ namespace World.NoiseGeneration
         private float offsetZ;
         private int seed;
 
-        public int Seed => seed; // Add a public property to get the seed
+        public int Seed => seed;
 
         /// <summary>
         /// Initializes the NoiseGenerator with a specific seed.
@@ -42,13 +45,37 @@ namespace World.NoiseGeneration
         }
 
         /// <summary>
-        /// Generates a height map using multi-octave Perlin noise for regular terrain.
+        /// Schedules a PerlinNoiseJob to generate the height map.
         /// </summary>
         /// <param name="width">Width of the height map.</param>
         /// <param name="height">Height of the height map.</param>
         /// <param name="chunkCoord">Chunk coordinates.</param>
         /// <param name="chunkSize">Size of the chunk.</param>
-        /// <returns>2D array representing the height map.</returns>
+        /// <param name="heights">NativeArray to store the generated heights.</param>
+        /// <returns>JobHandle for the scheduled job.</returns>
+        public JobHandle ScheduleHeightMapJob(int width, int height, Vector2Int chunkCoord, int chunkSize, NativeArray<float> heights)
+        {
+            PerlinNoiseJob noiseJob = new PerlinNoiseJob
+            {
+                noiseScale = this.noiseScale,
+                persistence = this.persistence,
+                lacunarity = this.lacunarity,
+                octaves = this.octaves,
+                heightMultiplier = this.heightMultiplier,
+                offsetX = this.offsetX,
+                offsetZ = this.offsetZ,
+                width = width,
+                height = height,
+                chunkCoord = chunkCoord,
+                chunkSize = chunkSize,
+                heights = heights
+            };
+
+            // Schedule the job
+            return noiseJob.Schedule();
+        }
+
+        [Obsolete("Only use for testing purposes, please use ScheduleHeightMapJob in final build.")]
         public float[,] GenerateHeightMap(int width, int height, Vector2Int chunkCoord, int chunkSize)
         {
             float[,] heightMap = new float[width, height];
@@ -112,6 +139,5 @@ namespace World.NoiseGeneration
 
             return noiseHeight / maxPossibleHeight;
         }
-
     }
 }
