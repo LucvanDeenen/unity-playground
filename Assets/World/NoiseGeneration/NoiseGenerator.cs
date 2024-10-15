@@ -85,6 +85,8 @@ namespace World.NoiseGeneration
         /// </summary>
         public float GetNormalizedNoiseValue(float x, float z, float noiseScaleOverride = -1f)
         {
+            int octaves = 2;
+            
             float amplitude = 1f;
             float frequency = 1f;
             float noiseHeight = 0f;
