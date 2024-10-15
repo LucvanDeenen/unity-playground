@@ -448,6 +448,10 @@ PrefabInstance:
       propertyPath: m_LocalRotation.z
       value: -0.023227055
       objectReference: {fileID: 0}
+    - target: {fileID: 8298448035254003044, guid: 214a29bdd397f334b9bd3e8df3a134b9, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8412741090196231344, guid: 214a29bdd397f334b9bd3e8df3a134b9, type: 3}
       propertyPath: m_Name
       value: Character
@@ -527,9 +531,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   player: {fileID: 779800572}
   voxelScale: 0.75
-  renderDistance: 12
   chunkSize: 32
   seed: 42
+  renderDistance: 12
   voxelMaterial: {fileID: 2100000, guid: 7c480906a069a8a4b9b111d94052f14d, type: 2}
   gradient:
     serializedVersion: 2
@@ -562,7 +566,6 @@ MonoBehaviour:
     m_NumColorKeys: 5
     m_NumAlphaKeys: 2
   wall: {r: 0.4716981, g: 0.4716981, b: 0.4716981, a: 1}
-  lastPlayerChunkCoord: {x: 0, y: 0}
   spawners: []
 --- !u!114 &1844900049
 MonoBehaviour:

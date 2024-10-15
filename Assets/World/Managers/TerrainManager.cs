@@ -4,7 +4,7 @@ using World.MeshGeneration;
 using World.NoiseGeneration;
 using World.Spawners;
 using World.Shared;
-using World.Chunks;
+using World.Terrain;
 
 namespace World.Managers
 {
@@ -33,7 +33,7 @@ namespace World.Managers
         protected ObjectPlacementManager placementManager;
         protected NoiseGenerator noiseGenerator;
         protected MeshGenerator meshGenerator;
-        protected Terrain terrain;
+        protected TerrainEntity terrain;
 
         protected virtual void Start()
         {
@@ -44,9 +44,9 @@ namespace World.Managers
             }
 
             placementManager = GetComponent<ObjectPlacementManager>();
+            terrain = new TerrainEntity(placementManager, chunkSize, voxelScale);
             meshGenerator = new MeshGenerator(voxelScale, gradient, wall);
             noiseGenerator = new NoiseGenerator(seed);
-            terrain = new Terrain(placementManager, chunkSize, voxelScale);
             foreach (Spawner spawner in spawners)
             {
                 if (spawner != null)
@@ -82,21 +82,21 @@ namespace World.Managers
                     if (!terrain.chunks.ContainsKey(chunkCoord))
                     {
                         // Generate and store new chunk.
-                        TerrainChunk chunk = new TerrainChunk(chunkCoord, chunkSize, voxelScale, transform, voxelMaterial);
+                        Chunk chunk = new Chunk(chunkCoord, chunkSize, voxelScale, transform, voxelMaterial);
                         GenerateTerrain(chunk);
                         terrain.chunks.Add(chunkCoord, chunk);
                     }
                 }
             }
 
-            terrain.ValidateChunks(activeChunks, player);
+            // terrain.ValidateChunks(activeChunks, player);
         }
 
         /// <summary>
         /// Abstract method to generate a terrain chunk. Must be implemented by derived classes.
         /// </summary>
         /// <param name="chunk">The terrain chunk to generate.</param>
-        protected virtual void GenerateTerrain(TerrainChunk chunk)
+        protected virtual void GenerateTerrain(Chunk chunk)
         {
             // Generate height map
             float[,] heightMapFloat = noiseGenerator.GenerateHeightMap(chunk.chunkSize + 1, chunk.chunkSize + 1, chunk.chunkCoord, chunk.chunkSize);

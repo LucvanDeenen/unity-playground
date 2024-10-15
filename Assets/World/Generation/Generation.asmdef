@@ -1,8 +1,11 @@
 {
-    "name": "Chunks",
+    "name": "Generation",
     "rootNamespace": "",
     "references": [
-        "GUID:4a15413d2468c424185db2ad09d04cbe"
+        "Unity.Mathematics",
+        "Unity.Burst",
+        "Unity.Collections",
+        "NoiseGeneration"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
