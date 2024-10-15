@@ -5,11 +5,9 @@ using Unity.Mathematics;
 
 namespace World.Generation
 {
-    [BurstCompile(CompileSynchronously = true)]
+    [BurstCompile]
     public struct ChunkJob : IJobParallelFor
     {
-        public int chunkSize;
-
         public struct MeshData
         {
 
@@ -32,80 +30,73 @@ namespace World.Generation
 
         }
 
-        [WriteOnly] public MeshData meshData;
-
+        [ReadOnly] public int chunkSize;
         [ReadOnly] public ChunkData chunkData;
         [ReadOnly] public BlockData blockData;
 
-        private int vCount;
+        // NativeQueues for thread-safe enqueueing
+        public NativeQueue<int3>.ParallelWriter VerticesQueue;
+        public NativeQueue<int>.ParallelWriter TrianglesQueue;
 
         public void Execute(int index)
         {
-            for (int x = 0; x < chunkSize; x++)
+            // Calculate x and z from the index
+            int x = index / chunkSize;
+            int z = index % chunkSize;
+
+            for (int y = 0; y < chunkSize; y++)
             {
-                for (int z = 0; z < chunkSize; z++)
+                int blockIndex = BlockExtensions.GetBlockIndex(new int3(x, y, z), chunkSize);
+                if (chunkData.Blocks[blockIndex].IsEmpty()) continue;
+
+                for (int i = 0; i < 6; i++)
                 {
-                    for (int y = 0; y < chunkSize; y++)
+                    var direction = (Direction)i;
+
+                    if (Check(direction, x, y, z))
                     {
-                        if (chunkData.Blocks[BlockExtensions.GetBlockIndex(new int3(x, y, z), chunkSize)].IsEmpty()) continue;
-
-                        for (int i = 0; i < 6; i++)
-                        {
-                            var direction = (Direction)i;
-
-                            if (Check(BlockExtensions.GetPositionInDirection(direction, x, y, z)))
-                            {
-                                CreateFace(direction, new int3(x, y, z));
-                            }
-                        }
+                        CreateFace(direction, new int3(x, y, z));
                     }
                 }
             }
         }
 
-        private void CreateFace(Direction direction, int3 pos)
+        private bool Check(Direction direction, int x, int y, int z)
         {
-            var _vertices = GetFaceVertices(direction, 1, pos);
-
-            meshData.Vertices.AddRange(_vertices);
-
-            _vertices.Dispose();
-
-            vCount += 4;
-
-            meshData.Triangles.Add(vCount - 4);
-            meshData.Triangles.Add(vCount - 4 + 1);
-            meshData.Triangles.Add(vCount - 4 + 2);
-            meshData.Triangles.Add(vCount - 4);
-            meshData.Triangles.Add(vCount - 4 + 2);
-            meshData.Triangles.Add(vCount - 4 + 3);
-        }
-
-        private bool Check(int3 position)
-        {
-            if (position.x >= chunkSize || position.x < 0 ||
-            position.y >= chunkSize || position.y < 0 ||
-            position.z >= chunkSize || position.z < 0)
+            int3 neighborPos = BlockExtensions.GetPositionInDirection(direction, x, y, z);
+            if (neighborPos.x >= chunkSize || neighborPos.x < 0 ||
+                neighborPos.y >= chunkSize || neighborPos.y < 0 ||
+                neighborPos.z >= chunkSize || neighborPos.z < 0)
             {
-                // Assume blocks outside the chunk are air
+                // Blocks outside the chunk are considered air
                 return true;
             }
 
-            int index = BlockExtensions.GetBlockIndex(position, chunkSize);
-            return chunkData.Blocks[index].IsEmpty();
+            int neighborIndex = BlockExtensions.GetBlockIndex(neighborPos, chunkSize);
+            return chunkData.Blocks[neighborIndex].IsEmpty();
         }
 
-        public NativeArray<int3> GetFaceVertices(Direction direction, int scale, int3 pos)
+        private void CreateFace(Direction direction, int3 pos)
         {
-            var faceVertices = new NativeArray<int3>(4, Allocator.Temp);
+            // Retrieve face vertices using the block data
+            int3 v0 = blockData.Vertices[blockData.Triangles[(int)direction * 4 + 0]] + pos;
+            int3 v1 = blockData.Vertices[blockData.Triangles[(int)direction * 4 + 1]] + pos;
+            int3 v2 = blockData.Vertices[blockData.Triangles[(int)direction * 4 + 2]] + pos;
+            int3 v3 = blockData.Vertices[blockData.Triangles[(int)direction * 4 + 3]] + pos;
 
-            for (int i = 0; i < 4; i++)
-            {
-                var index = blockData.Triangles[(int)direction * 4 + i];
-                faceVertices[i] = blockData.Vertices[index] * scale + pos;
-            }
+            // Enqueue vertices
+            VerticesQueue.Enqueue(v0);
+            VerticesQueue.Enqueue(v1);
+            VerticesQueue.Enqueue(v2);
+            VerticesQueue.Enqueue(v3);
 
-            return faceVertices;
+            // Enqueue triangle indices as relative placeholders (0,1,2,0,2,3)
+            TrianglesQueue.Enqueue(0);
+            TrianglesQueue.Enqueue(1);
+            TrianglesQueue.Enqueue(2);
+            TrianglesQueue.Enqueue(0);
+            TrianglesQueue.Enqueue(2);
+            TrianglesQueue.Enqueue(3);
         }
     }
 }

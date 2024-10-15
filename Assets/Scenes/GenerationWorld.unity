@@ -164,7 +164,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   chunkPrefab: {fileID: 364676019302285013, guid: 6183eec431f77fd4ba4472b5de0c89b6, type: 3}
-  worldSizeInChunks: 10
+  worldSizeInChunks: 12
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0

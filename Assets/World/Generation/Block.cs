@@ -79,6 +79,12 @@ namespace World.Generation
             AppDomain.CurrentDomain.DomainUnload += OnDomainUnload;
         }
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        static void RegisterDomainUnload()
+        {
+            AppDomain.CurrentDomain.DomainUnload += OnDomainUnload;
+        }
+
         static void OnDomainUnload(object sender, EventArgs e)
         {
             if (Vertices.IsCreated)
@@ -110,29 +116,23 @@ namespace World.Generation
 
         public static int3 GetPositionInDirection(Direction direction, int x, int y, int z)
         {
-            int3 pos = new int3(x, y, z);
             switch (direction)
             {
                 case Direction.Forward:
-                    pos.z += 1;
-                    break;
-                case Direction.Back:
-                    pos.z -= 1;
-                    break;
+                    return new int3(x, y, z + 1);
                 case Direction.Right:
-                    pos.x += 1;
-                    break;
+                    return new int3(x + 1, y, z);
+                case Direction.Back:
+                    return new int3(x, y, z - 1);
                 case Direction.Left:
-                    pos.x -= 1;
-                    break;
+                    return new int3(x - 1, y, z);
                 case Direction.Up:
-                    pos.y += 1;
-                    break;
+                    return new int3(x, y + 1, z);
                 case Direction.Down:
-                    pos.y -= 1;
-                    break;
+                    return new int3(x, y - 1, z);
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
             }
-            return pos;
         }
     }
 }
