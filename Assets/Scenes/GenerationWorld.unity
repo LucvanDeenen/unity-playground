@@ -164,12 +164,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   player: {fileID: 745303864}
+  currentChunkCoord: {x: 0, y: 0}
   chunkPrefab: {fileID: 364676019302285013, guid: 6183eec431f77fd4ba4472b5de0c89b6, type: 3}
   voxelScale: 0.75
   seed: 42
-  renderDistance: 3
+  renderDistance: 12
   heightMultiplier: 15
   chunkSize: 32
+  maxChunkHeight: 150
   voxelMaterial: {fileID: 2100000, guid: 7c480906a069a8a4b9b111d94052f14d, type: 2}
   gradient:
     serializedVersion: 2
@@ -312,7 +314,7 @@ GameObject:
   - component: {fileID: 745303862}
   m_Layer: 0
   m_Name: MainCamera
-  m_TagString: Untagged
+  m_TagString: MainCamera
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

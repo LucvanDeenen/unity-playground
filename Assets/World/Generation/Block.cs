@@ -96,20 +96,6 @@ namespace World.Generation
 
     public static class BlockExtensions
     {
-        [Obsolete("Remove this in the future once a first setup is complete")]
-        public static NativeArray<int3> GetFaceVertices(Direction direction, int scale, int3 pos)
-        {
-            var faceVertices = new NativeArray<int3>(4, Allocator.Temp);
-
-            for (int i = 0; i < 4; i++)
-            {
-                var index = BlockData.Triangles[(int)direction * 4 + i];
-                faceVertices[i] = BlockData.Vertices[index] * scale + pos;
-            }
-
-            return faceVertices;
-        }
-
         public static int GetBlockIndex(int3 position, int chunkSize, int maxChunkHeight) => position.x + position.z * chunkSize + position.y * chunkSize * chunkSize;
 
         public static bool IsEmpty(this Block block) => block == Block.Air;

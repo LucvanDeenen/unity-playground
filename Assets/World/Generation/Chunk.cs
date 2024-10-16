@@ -26,10 +26,12 @@ namespace World.Generation
             this.maxChunkHeight = maxChunkHeight;
         }
 
+        private MeshCollider _meshCollider;
         private MeshFilter _meshFilter;
 
         void Awake()
         {
+            _meshCollider = GetComponent<MeshCollider>();
             _meshFilter = GetComponent<MeshFilter>();
         }
 
@@ -85,7 +87,7 @@ namespace World.Generation
                 TrianglesQueue = trianglesQueue.AsParallelWriter()
             };
 
-            JobHandle jobHandle = chunkJob.Schedule(chunkSize * chunkSize, 64);
+            JobHandle jobHandle = chunkJob.Schedule(chunkSize * chunkSize, 256);
 
             // Wait until the job is complete without blocking the main thread
             while (!jobHandle.IsCompleted)
@@ -158,6 +160,7 @@ namespace World.Generation
             mesh.RecalculateTangents();
 
             // Assign the mesh to the MeshFilter
+            _meshCollider.sharedMesh = mesh;
             _meshFilter.mesh = mesh;
         }
 
@@ -176,8 +179,8 @@ namespace World.Generation
         void OnDrawGizmos()
         {
             Gizmos.color = Color.green;
-            Vector3 center = transform.position + new Vector3((chunkSize * voxelScale) / 2f, (chunkSize * voxelScale) / 2f, (chunkSize * voxelScale) / 2f);
-            Vector3 size = new Vector3(chunkSize * voxelScale, chunkSize * voxelScale, chunkSize * voxelScale);
+            Vector3 center = transform.position + new Vector3((chunkSize * voxelScale) / 2f, (maxChunkHeight * voxelScale) / 2f, (chunkSize * voxelScale) / 2f);
+            Vector3 size = new Vector3(chunkSize * voxelScale, maxChunkHeight * voxelScale, chunkSize * voxelScale);
             Gizmos.DrawWireCube(center, size);
         }
     }

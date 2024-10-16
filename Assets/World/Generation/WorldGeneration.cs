@@ -19,16 +19,20 @@ namespace World.Generation
         public int renderDistance = 12;
         public float heightMultiplier = 25f;
         public int chunkSize = 32;
-        public int maxChunkHeight = 250;
+        public int maxChunkHeight = 120;
 
         [Header("Materials")]
         public Material voxelMaterial;
         public Gradient gradient;
         public Color wall;
 
+        private Dictionary<Vector3Int, MeshRenderer> renderers = new Dictionary<Vector3Int, MeshRenderer>();
         private Dictionary<Vector3Int, GameObject> chunks = new Dictionary<Vector3Int, GameObject>();
         private Queue<GameObject> chunkPool = new Queue<GameObject>();
         private NoiseGenerator noiseGenerator;
+        private Camera mainCamera;
+        private Plane[] frustumPlanes;
+
 
         void Start()
         {
@@ -41,11 +45,17 @@ namespace World.Generation
             noiseGenerator = new NoiseGenerator(seed);
             noiseGenerator.SetHeightMultiplier(heightMultiplier);
 
+            mainCamera = Camera.main;
+
             currentChunkCoord = GetChunkCoordFromPosition(player.position);
             LoadChunks();
-            UnloadChunks();
 
             StartCoroutine(UpdateChunks());
+        }
+
+        void Update()
+        {
+            UpdateChunkVisibility();
         }
 
         IEnumerator UpdateChunks()
@@ -61,7 +71,7 @@ namespace World.Generation
                     UnloadChunks();
                 }
 
-                yield return new WaitForSeconds(0.5f);
+                yield return new WaitForSeconds(2f);
             }
         }
 
@@ -132,7 +142,7 @@ namespace World.Generation
             {
                 newChunk = Instantiate(chunkPrefab, chunkPosition, Quaternion.identity, this.transform);
             }
-            newChunk.name = $"Chunk_{chunkCoord.x}_{chunkCoord.y}";
+            newChunk.name = $"Chunk_{chunkCoord.x}_{chunkCoord.z}";
 
             Chunk chunkBehaviour = newChunk.GetComponent<Chunk>();
             chunkBehaviour.SetNoiseGenerator(noiseGenerator);
@@ -146,6 +156,11 @@ namespace World.Generation
             yield return StartCoroutine(chunkBehaviour.GenerateChunk());
 
             chunks.Add(chunkCoord, newChunk);
+            MeshRenderer meshRenderer = newChunk.GetComponent<MeshRenderer>();
+            if (meshRenderer != null)
+            {
+                renderers.Add(chunkCoord, meshRenderer);
+            }
         }
 
         /// <summary>
@@ -160,6 +175,37 @@ namespace World.Generation
                 chunk.SetActive(false);
                 chunkPool.Enqueue(chunk);
                 chunks.Remove(chunkCoord);
+                if (renderers.ContainsKey(chunkCoord))
+                {
+                    renderers.Remove(chunkCoord);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Updates the visibility of all loaded chunks based on the camera's frustum.
+        /// </summary>
+        void UpdateChunkVisibility()
+        {
+            if (mainCamera == null)
+                return;
+
+            // Update frustum planes based on the current camera view
+            frustumPlanes = GeometryUtility.CalculateFrustumPlanes(mainCamera);
+
+            foreach (var kvp in chunks)
+            {
+                Vector3 chunkPos = kvp.Value.transform.position;
+                Vector3 chunkSizeVec = new Vector3(chunkSize * voxelScale, maxChunkHeight * voxelScale, chunkSize * voxelScale);
+                Bounds bounds = new Bounds(chunkPos + new Vector3(chunkSize * voxelScale / 2f, maxChunkHeight * voxelScale / 2f, chunkSize * voxelScale / 2f),
+                                          chunkSizeVec);
+
+                bool isVisible = GeometryUtility.TestPlanesAABB(frustumPlanes, bounds);
+
+                if (renderers.TryGetValue(kvp.Key, out MeshRenderer renderer))
+                {
+                    renderer.enabled = isVisible;
+                }
             }
         }
     }
