@@ -99,7 +99,7 @@ namespace World.Managers
         protected virtual void GenerateTerrain(Chunk chunk)
         {
             // Generate height map
-            float[,] heightMapFloat = noiseGenerator.GenerateHeightMap(chunk.chunkSize + 1, chunk.chunkSize + 1, chunk.chunkCoord, chunk.chunkSize);
+            float[,] heightMapFloat = noiseGenerator.GenerateHeightMap(chunk.chunkCoord, chunk.chunkSize);
 
             // Generate mesh data
             MeshData meshData = meshGenerator.GenerateMeshData(heightMapFloat);
