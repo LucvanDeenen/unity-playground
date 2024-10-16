@@ -42,7 +42,6 @@ namespace World.Generation
                 {
                     float heightValue = heightMap[x, z];
                     int yHeight = Mathf.FloorToInt(heightValue);
-                    yHeight = math.clamp(yHeight, 0, chunkSize - 1);
 
                     for (int y = 0; y < chunkSize; y++)
                     {

@@ -13,7 +13,7 @@ namespace World.Generation
 
         [Header("Terrain Settings")]
         public GameObject chunkPrefab;
-        [SerializeField] private float voxelScale = 1f;
+        [SerializeField] private float voxelScale = 0.75f;
         [SerializeField] protected int seed = 42;
         [SerializeField] protected int renderDistance = 12;
         [SerializeField] protected float heightMultiplier = 15f;
@@ -62,7 +62,7 @@ namespace World.Generation
                     UnloadChunks();
                 }
 
-                yield return new WaitForSeconds(1f);
+                yield return new WaitForSeconds(0.5f);
             }
         }
 
@@ -162,9 +162,7 @@ namespace World.Generation
                 GameObject chunk = chunks[chunkCoord];
                 chunk.SetActive(false);
                 chunkPool.Enqueue(chunk);
-                
                 chunks.Remove(chunkCoord);
-                GameObject.Destroy(chunk);
             }
         }
     }

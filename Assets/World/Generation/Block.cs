@@ -96,7 +96,7 @@ namespace World.Generation
 
     public static class BlockExtensions
     {
-
+        [Obsolete("Remove this in the future once a first setup is complete")]
         public static NativeArray<int3> GetFaceVertices(Direction direction, int scale, int3 pos)
         {
             var faceVertices = new NativeArray<int3>(4, Allocator.Temp);
