@@ -13,36 +13,26 @@ namespace World.Generation
     {
         private NoiseGenerator noiseGenerator;
         public void SetNoiseGenerator(NoiseGenerator noiseGenerator) => this.noiseGenerator = noiseGenerator;
+        private Vector2Int chunkCoord;
+        public void SetChunkCoord(Vector2Int chunkCoord) => this.chunkCoord = chunkCoord;
         private int chunkSize;
         public void SetChunkSize(int chunkSize) => this.chunkSize = chunkSize;
+        private float voxelScale;
+        public void SetVoxelScale(float voxelScale) => this.voxelScale = voxelScale;
 
         private MeshFilter _meshFilter;
-        private int chunkCoordX;
-        private int chunkCoordZ;
 
         void Awake()
         {
             _meshFilter = GetComponent<MeshFilter>();
         }
-
+        
         public IEnumerator GenerateChunk()
         {
-            if (_meshFilter.mesh != null)
-            {
-                _meshFilter.mesh.Clear();
-            }
-            else
-            {
-                _meshFilter.mesh = new Mesh();
-            }
-            
-            // Calculate chunk coordinates based on position
-            chunkCoordX = Mathf.FloorToInt(transform.position.x / chunkSize);
-            chunkCoordZ = Mathf.FloorToInt(transform.position.z / chunkSize);
-            Vector2Int chunkCoord = new Vector2Int(chunkCoordX, chunkCoordZ);
+            _meshFilter.mesh = new Mesh();
 
             // Generate the height map
-            float[,] heightMap = noiseGenerator.GenerateHeightMap(chunkSize + 1, chunkSize + 1, chunkCoord, chunkSize);
+            float[,] heightMap = noiseGenerator.GenerateHeightMap(chunkCoord, chunkSize);
 
             // Initialize the blocks array
             var blocks = new NativeArray<Block>(chunkSize * chunkSize * chunkSize, Allocator.TempJob);
@@ -52,15 +42,12 @@ namespace World.Generation
                 {
                     float heightValue = heightMap[x, z];
                     int yHeight = Mathf.FloorToInt(heightValue);
-                    yHeight = math.clamp(yHeight, 0, chunkSize - 1); // Clamp to prevent out-of-bounds
+                    yHeight = math.clamp(yHeight, 0, chunkSize - 1);
 
                     for (int y = 0; y < chunkSize; y++)
                     {
                         int index = BlockExtensions.GetBlockIndex(new int3(x, y, z), chunkSize);
-                        if (y <= yHeight)
-                            blocks[index] = Block.Stone;
-                        else
-                            blocks[index] = Block.Air;
+                        blocks[index] = y <= yHeight ? Block.Ground : Block.Air;
                     }
                 }
             }
@@ -94,7 +81,7 @@ namespace World.Generation
 
             JobHandle jobHandle = chunkJob.Schedule(chunkSize * chunkSize, 64);
 
-            // Wait until the job is complete
+            // Wait until the job is complete without blocking the main thread
             while (!jobHandle.IsCompleted)
             {
                 yield return null;
@@ -116,7 +103,7 @@ namespace World.Generation
                 if (verticesQueue.Count < 4)
                 {
                     Debug.LogWarning("Incomplete face vertices detected.");
-                    break;
+                    break; // Avoid dequeuing incomplete faces
                 }
 
                 int3 v0 = verticesQueue.Dequeue();
@@ -125,10 +112,10 @@ namespace World.Generation
                 int3 v3 = verticesQueue.Dequeue();
 
                 // Add vertices to the combined list
-                combinedVertices.Add(new Vector3(v0.x, v0.y, v0.z));
-                combinedVertices.Add(new Vector3(v1.x, v1.y, v1.z));
-                combinedVertices.Add(new Vector3(v2.x, v2.y, v2.z));
-                combinedVertices.Add(new Vector3(v3.x, v3.y, v3.z));
+                combinedVertices.Add(new Vector3(v0.x * voxelScale, v0.y * voxelScale, v0.z * voxelScale));
+                combinedVertices.Add(new Vector3(v1.x * voxelScale, v1.y * voxelScale, v1.z * voxelScale));
+                combinedVertices.Add(new Vector3(v2.x * voxelScale, v2.y * voxelScale, v2.z * voxelScale));
+                combinedVertices.Add(new Vector3(v3.x * voxelScale, v3.y * voxelScale, v3.z * voxelScale));
 
                 // Define two triangles for the face with correct indices
                 combinedTriangles.Add(currentVertexIndex);
@@ -166,6 +153,18 @@ namespace World.Generation
 
             // Assign the mesh to the MeshFilter
             _meshFilter.mesh = mesh;
+        }
+
+        public void ResetMesh()
+        {
+            if (_meshFilter.mesh != null)
+            {
+                _meshFilter.mesh.Clear();
+            }
+            else
+            {
+                _meshFilter.mesh = new Mesh();
+            }
         }
     }
 }

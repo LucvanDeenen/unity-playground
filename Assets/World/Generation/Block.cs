@@ -11,7 +11,7 @@ namespace World.Generation
 
         Null = 0x0000,
         Air = 0x0001,
-        Stone = 0x0002
+        Ground = 0x0002
 
     }
 

@@ -13,7 +13,7 @@ namespace World.Generation
 
         [Header("Terrain Settings")]
         public GameObject chunkPrefab;
-        [SerializeField] private float voxelScale = 0.75f;
+        [SerializeField] private float voxelScale = 1f;
         [SerializeField] protected int seed = 42;
         [SerializeField] protected int renderDistance = 12;
         [SerializeField] protected float heightMultiplier = 15f;
@@ -43,6 +43,9 @@ namespace World.Generation
             noiseGenerator.SetHeightMultiplier(heightMultiplier);
 
             currentChunkCoord = GetChunkCoordFromPosition(player.position);
+            LoadChunks();
+            UnloadChunks();
+
             StartCoroutine(UpdateChunks());
         }
 
@@ -63,7 +66,7 @@ namespace World.Generation
             }
         }
 
-        private Vector2Int GetChunkCoordFromPosition(Vector3 position)
+        Vector2Int GetChunkCoordFromPosition(Vector3 position)
         {
             int x = Mathf.FloorToInt(position.x / (chunkSize * voxelScale));
             int z = Mathf.FloorToInt(position.z / (chunkSize * voxelScale));
@@ -119,16 +122,16 @@ namespace World.Generation
         /// <param name="chunkCoord">Chunk coordinates</param>
         IEnumerator LoadChunkAsync(Vector2Int chunkCoord)
         {
+            Vector3 chunkPosition = new Vector3(chunkCoord.x * chunkSize * voxelScale, 0, chunkCoord.y * chunkSize * voxelScale);
             GameObject newChunk;
             if (chunkPool.Count > 0)
             {
                 newChunk = chunkPool.Dequeue();
                 newChunk.SetActive(true);
-                newChunk.transform.position = new Vector3(chunkCoord.x * chunkSize * voxelScale, 0, chunkCoord.y * chunkSize * voxelScale);
+                newChunk.transform.position = chunkPosition;
             }
             else
             {
-                Vector3 chunkPosition = new Vector3(chunkCoord.x * chunkSize * voxelScale, 0, chunkCoord.y * chunkSize * voxelScale);
                 newChunk = Instantiate(chunkPrefab, chunkPosition, Quaternion.identity, this.transform);
             }
 
@@ -137,6 +140,10 @@ namespace World.Generation
             Chunk chunkBehaviour = newChunk.GetComponent<Chunk>();
             chunkBehaviour.SetNoiseGenerator(noiseGenerator);
             chunkBehaviour.SetChunkSize(chunkSize);
+            chunkBehaviour.SetChunkCoord(chunkCoord);
+            chunkBehaviour.SetVoxelScale(voxelScale);
+
+            chunkBehaviour.ResetMesh();
 
             // Start chunk generation without blocking
             yield return StartCoroutine(chunkBehaviour.GenerateChunk());
@@ -155,7 +162,9 @@ namespace World.Generation
                 GameObject chunk = chunks[chunkCoord];
                 chunk.SetActive(false);
                 chunkPool.Enqueue(chunk);
+                
                 chunks.Remove(chunkCoord);
+                GameObject.Destroy(chunk);
             }
         }
     }

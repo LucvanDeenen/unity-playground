@@ -45,12 +45,12 @@ namespace World.NoiseGeneration
             offsetZ = prng.Next(-100000, 100000);
         }
 
-        public float[,] GenerateHeightMap(int width, int height, Vector2Int chunkCoord, int chunkSize)
+        public float[,] GenerateHeightMap(Vector2Int chunkCoord, int chunkSize)
         {
-            float[,] heightMap = new float[width, height];
-            for (int x = 0; x < width; x++)
+            float[,] heightMap = new float[chunkSize, chunkSize];
+            for (int x = 0; x < chunkSize; x++)
             {
-                for (int z = 0; z < height; z++)
+                for (int z = 0; z < chunkSize; z++)
                 {
                     int worldX = chunkCoord.x * chunkSize + x;
                     int worldZ = chunkCoord.y * chunkSize + z;
