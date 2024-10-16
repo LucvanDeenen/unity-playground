@@ -163,8 +163,45 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 130b1911ba54ace49849555123e05baf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  player: {fileID: 745303864}
   chunkPrefab: {fileID: 364676019302285013, guid: 6183eec431f77fd4ba4472b5de0c89b6, type: 3}
-  worldSizeInChunks: 12
+  voxelScale: 0.75
+  seed: 42
+  renderDistance: 3
+  heightMultiplier: 15
+  chunkSize: 32
+  voxelMaterial: {fileID: 2100000, guid: 7c480906a069a8a4b9b111d94052f14d, type: 2}
+  gradient:
+    serializedVersion: 2
+    key0: {r: 1, g: 0.9901909, b: 0.023584902, a: 1}
+    key1: {r: 0.13573885, g: 1, b: 0, a: 1}
+    key2: {r: 0.6509434, g: 0.54199886, b: 0.31626025, a: 0}
+    key3: {r: 0.5283019, g: 0.5283019, b: 0.5283019, a: 0}
+    key4: {r: 1, g: 1, b: 1, a: 0}
+    key5: {r: 0, g: 0, b: 0, a: 0}
+    key6: {r: 0, g: 0, b: 0, a: 0}
+    key7: {r: 0, g: 0, b: 0, a: 0}
+    ctime0: 0
+    ctime1: 20046
+    ctime2: 36430
+    ctime3: 54741
+    ctime4: 65535
+    ctime5: 0
+    ctime6: 0
+    ctime7: 0
+    atime0: 0
+    atime1: 65535
+    atime2: 0
+    atime3: 0
+    atime4: 0
+    atime5: 0
+    atime6: 0
+    atime7: 0
+    m_Mode: 0
+    m_ColorSpace: -1
+    m_NumColorKeys: 5
+    m_NumAlphaKeys: 2
+  wall: {r: 0.5849056, g: 0.5849056, b: 0.5849056, a: 0}
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0
@@ -348,7 +385,7 @@ Transform:
   m_GameObject: {fileID: 745303861}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 50, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

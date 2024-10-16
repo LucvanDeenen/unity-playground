@@ -11,31 +11,31 @@ namespace World.Generation
 {
     public class Chunk : MonoBehaviour
     {
-
-        public MeshFilter _meshFilter;
-        public int chunkSize = 32;
-
         private NoiseGenerator noiseGenerator;
+        public void SetNoiseGenerator(NoiseGenerator noiseGenerator) => this.noiseGenerator = noiseGenerator;
+        private int chunkSize;
+        public void SetChunkSize(int chunkSize) => this.chunkSize = chunkSize;
+
+        private MeshFilter _meshFilter;
         private int chunkCoordX;
         private int chunkCoordZ;
-
 
         void Awake()
         {
             _meshFilter = GetComponent<MeshFilter>();
         }
 
-        void Start()
+        public IEnumerator GenerateChunk()
         {
-            StartCoroutine(GenerateChunk());
-        }
-
-        IEnumerator GenerateChunk()
-        {
-            int seed = 42;
-            noiseGenerator = new NoiseGenerator(seed);
-            noiseGenerator.SetHeightMultiplier(10f);
-
+            if (_meshFilter.mesh != null)
+            {
+                _meshFilter.mesh.Clear();
+            }
+            else
+            {
+                _meshFilter.mesh = new Mesh();
+            }
+            
             // Calculate chunk coordinates based on position
             chunkCoordX = Mathf.FloorToInt(transform.position.x / chunkSize);
             chunkCoordZ = Mathf.FloorToInt(transform.position.z / chunkSize);
@@ -92,10 +92,13 @@ namespace World.Generation
                 TrianglesQueue = trianglesQueue.AsParallelWriter()
             };
 
-            JobHandle jobHandle = chunkJob.Schedule(chunkSize * chunkSize, 64); // Batch size of 64
+            JobHandle jobHandle = chunkJob.Schedule(chunkSize * chunkSize, 64);
 
             // Wait until the job is complete
-            yield return new WaitUntil(() => jobHandle.IsCompleted);
+            while (!jobHandle.IsCompleted)
+            {
+                yield return null;
+            }
 
             // Ensure the job is completed
             jobHandle.Complete();
@@ -113,7 +116,7 @@ namespace World.Generation
                 if (verticesQueue.Count < 4)
                 {
                     Debug.LogWarning("Incomplete face vertices detected.");
-                    break; // Avoid dequeuing incomplete faces
+                    break;
                 }
 
                 int3 v0 = verticesQueue.Dequeue();
