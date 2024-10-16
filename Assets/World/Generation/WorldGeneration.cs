@@ -9,27 +9,26 @@ namespace World.Generation
     {
         [Header("Player Settings")]
         public Transform player;
+        public Vector2Int currentChunkCoord;
 
 
         [Header("Terrain Settings")]
         public GameObject chunkPrefab;
-        [SerializeField] private float voxelScale = 0.75f;
-        [SerializeField] protected int seed = 42;
-        [SerializeField] protected int renderDistance = 12;
-        [SerializeField] protected float heightMultiplier = 15f;
-        [SerializeField] private int chunkSize = 32;
+        public float voxelScale = 0.75f;
+        public int seed = 42;
+        public int renderDistance = 12;
+        public float heightMultiplier = 25f;
+        public int chunkSize = 32;
+        public int maxChunkHeight = 250;
 
         [Header("Materials")]
         public Material voxelMaterial;
         public Gradient gradient;
         public Color wall;
 
-        protected NoiseGenerator noiseGenerator;
-
-        [Header("Debugging")]
-        public Vector2Int currentChunkCoord;
-        public Queue<GameObject> chunkPool = new Queue<GameObject>();
-        public Dictionary<Vector2Int, GameObject> chunks = new Dictionary<Vector2Int, GameObject>();
+        private Dictionary<Vector3Int, GameObject> chunks = new Dictionary<Vector3Int, GameObject>();
+        private Queue<GameObject> chunkPool = new Queue<GameObject>();
+        private NoiseGenerator noiseGenerator;
 
         void Start()
         {
@@ -82,8 +81,7 @@ namespace World.Generation
             {
                 for (int zOffset = -renderDistance; zOffset <= renderDistance; zOffset++)
                 {
-                    Vector2Int chunkCoord = new Vector2Int(currentChunkCoord.x + xOffset, currentChunkCoord.y + zOffset);
-
+                    Vector3Int chunkCoord = new Vector3Int(currentChunkCoord.x + xOffset, 0, currentChunkCoord.y + zOffset);
                     if (!chunks.ContainsKey(chunkCoord))
                     {
                         StartCoroutine(LoadChunkAsync(chunkCoord));
@@ -97,12 +95,12 @@ namespace World.Generation
         /// </summary>
         void UnloadChunks()
         {
-            List<Vector2Int> chunksToUnload = new List<Vector2Int>();
+            List<Vector3Int> chunksToUnload = new List<Vector3Int>();
 
             foreach (var chunk in chunks)
             {
                 int distanceX = Mathf.Abs(chunk.Key.x - currentChunkCoord.x);
-                int distanceZ = Mathf.Abs(chunk.Key.y - currentChunkCoord.y);
+                int distanceZ = Mathf.Abs(chunk.Key.z - currentChunkCoord.y);
 
                 if (distanceX > renderDistance || distanceZ > renderDistance)
                 {
@@ -120,9 +118,9 @@ namespace World.Generation
         /// Asynchronously loads a single chunk at the specified coordinates.
         /// </summary>
         /// <param name="chunkCoord">Chunk coordinates</param>
-        IEnumerator LoadChunkAsync(Vector2Int chunkCoord)
+        IEnumerator LoadChunkAsync(Vector3Int chunkCoord)
         {
-            Vector3 chunkPosition = new Vector3(chunkCoord.x * chunkSize * voxelScale, 0, chunkCoord.y * chunkSize * voxelScale);
+            Vector3 chunkPosition = new Vector3(chunkCoord.x * chunkSize * voxelScale, chunkCoord.y * chunkSize * voxelScale, chunkCoord.z * chunkSize * voxelScale);
             GameObject newChunk;
             if (chunkPool.Count > 0)
             {
@@ -134,13 +132,12 @@ namespace World.Generation
             {
                 newChunk = Instantiate(chunkPrefab, chunkPosition, Quaternion.identity, this.transform);
             }
-
             newChunk.name = $"Chunk_{chunkCoord.x}_{chunkCoord.y}";
 
             Chunk chunkBehaviour = newChunk.GetComponent<Chunk>();
             chunkBehaviour.SetNoiseGenerator(noiseGenerator);
-            chunkBehaviour.SetChunkSize(chunkSize);
-            chunkBehaviour.SetChunkCoord(chunkCoord);
+            chunkBehaviour.SetChunkSize(chunkSize, maxChunkHeight);
+            chunkBehaviour.SetChunkCoord(new Vector2Int(chunkCoord.x, chunkCoord.z));
             chunkBehaviour.SetVoxelScale(voxelScale);
 
             chunkBehaviour.ResetMesh();
@@ -155,7 +152,7 @@ namespace World.Generation
         /// Unloads (destroys) a single chunk at the specified coordinates.
         /// </summary>
         /// <param name="chunkCoord">Chunk coordinates</param>
-        void UnloadChunk(Vector2Int chunkCoord)
+        void UnloadChunk(Vector3Int chunkCoord)
         {
             if (chunks.ContainsKey(chunkCoord))
             {

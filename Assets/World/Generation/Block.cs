@@ -110,7 +110,7 @@ namespace World.Generation
             return faceVertices;
         }
 
-        public static int GetBlockIndex(int3 position, int chunkSize) => position.x + position.z * chunkSize + position.y * chunkSize * chunkSize;
+        public static int GetBlockIndex(int3 position, int chunkSize, int maxChunkHeight) => position.x + position.z * chunkSize + position.y * chunkSize * chunkSize;
 
         public static bool IsEmpty(this Block block) => block == Block.Air;
 

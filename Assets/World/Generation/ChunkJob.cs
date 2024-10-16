@@ -31,6 +31,7 @@ namespace World.Generation
         }
 
         [ReadOnly] public int chunkSize;
+        [ReadOnly] public int maxChunkHeight;
         [ReadOnly] public ChunkData chunkData;
         [ReadOnly] public BlockData blockData;
 
@@ -44,35 +45,36 @@ namespace World.Generation
             int x = index / chunkSize;
             int z = index % chunkSize;
 
-            for (int y = 0; y < chunkSize; y++)
+            for (int y = 0; y < maxChunkHeight; y++)
             {
-                int blockIndex = BlockExtensions.GetBlockIndex(new int3(x, y, z), chunkSize);
+                int3 position = new int3(x, y, z);
+                int blockIndex = BlockExtensions.GetBlockIndex(new int3(x, y, z), chunkSize, maxChunkHeight);
                 if (chunkData.Blocks[blockIndex].IsEmpty()) continue;
 
                 for (int i = 0; i < 6; i++)
                 {
                     var direction = (Direction)i;
 
-                    if (Check(direction, x, y, z))
+                    if (Check(direction, position))
                     {
-                        CreateFace(direction, new int3(x, y, z));
+                        CreateFace(direction, position);
                     }
                 }
             }
         }
 
-        private bool Check(Direction direction, int x, int y, int z)
+        private bool Check(Direction direction, int3 pos)
         {
-            int3 neighborPos = BlockExtensions.GetPositionInDirection(direction, x, y, z);
+            int3 neighborPos = BlockExtensions.GetPositionInDirection(direction, pos.x, pos.y, pos.z);
             if (neighborPos.x >= chunkSize || neighborPos.x < 0 ||
-                neighborPos.y >= chunkSize || neighborPos.y < 0 ||
+                neighborPos.y >= maxChunkHeight || neighborPos.y < 0 ||
                 neighborPos.z >= chunkSize || neighborPos.z < 0)
             {
                 // Blocks outside the chunk are considered air
                 return true;
             }
 
-            int neighborIndex = BlockExtensions.GetBlockIndex(neighborPos, chunkSize);
+            int neighborIndex = BlockExtensions.GetBlockIndex(neighborPos, chunkSize, maxChunkHeight);
             return chunkData.Blocks[neighborIndex].IsEmpty();
         }
 

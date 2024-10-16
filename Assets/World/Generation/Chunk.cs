@@ -12,13 +12,19 @@ namespace World.Generation
     public class Chunk : MonoBehaviour
     {
         private NoiseGenerator noiseGenerator;
-        public void SetNoiseGenerator(NoiseGenerator noiseGenerator) => this.noiseGenerator = noiseGenerator;
         private Vector2Int chunkCoord;
-        public void SetChunkCoord(Vector2Int chunkCoord) => this.chunkCoord = chunkCoord;
-        private int chunkSize;
-        public void SetChunkSize(int chunkSize) => this.chunkSize = chunkSize;
         private float voxelScale;
+        private int chunkSize;
+        private int maxChunkHeight;
+
+        public void SetNoiseGenerator(NoiseGenerator noiseGenerator) => this.noiseGenerator = noiseGenerator;
+        public void SetChunkCoord(Vector2Int chunkCoord) => this.chunkCoord = chunkCoord;
         public void SetVoxelScale(float voxelScale) => this.voxelScale = voxelScale;
+        public void SetChunkSize(int chunkSize, int maxChunkHeight)
+        {
+            this.chunkSize = chunkSize;
+            this.maxChunkHeight = maxChunkHeight;
+        }
 
         private MeshFilter _meshFilter;
 
@@ -26,7 +32,7 @@ namespace World.Generation
         {
             _meshFilter = GetComponent<MeshFilter>();
         }
-        
+
         public IEnumerator GenerateChunk()
         {
             _meshFilter.mesh = new Mesh();
@@ -35,7 +41,7 @@ namespace World.Generation
             float[,] heightMap = noiseGenerator.GenerateHeightMap(chunkCoord, chunkSize);
 
             // Initialize the blocks array
-            var blocks = new NativeArray<Block>(chunkSize * chunkSize * chunkSize, Allocator.TempJob);
+            var blocks = new NativeArray<Block>(chunkSize * maxChunkHeight * chunkSize, Allocator.TempJob);
             for (int x = 0; x < chunkSize; x++)
             {
                 for (int z = 0; z < chunkSize; z++)
@@ -43,9 +49,9 @@ namespace World.Generation
                     float heightValue = heightMap[x, z];
                     int yHeight = Mathf.FloorToInt(heightValue);
 
-                    for (int y = 0; y < chunkSize; y++)
+                    for (int y = 0; y < maxChunkHeight; y++)
                     {
-                        int index = BlockExtensions.GetBlockIndex(new int3(x, y, z), chunkSize);
+                        int index = BlockExtensions.GetBlockIndex(new int3(x, y, z), chunkSize, maxChunkHeight);
                         blocks[index] = y <= yHeight ? Block.Ground : Block.Air;
                     }
                 }
@@ -71,9 +77,10 @@ namespace World.Generation
             // Schedule the parallel job
             ChunkJob chunkJob = new ChunkJob
             {
-                chunkSize = chunkSize,
-                chunkData = chunkData,
                 blockData = blockData,
+                chunkData = chunkData,
+                chunkSize = chunkSize,
+                maxChunkHeight = maxChunkHeight,
                 VerticesQueue = verticesQueue.AsParallelWriter(),
                 TrianglesQueue = trianglesQueue.AsParallelWriter()
             };
@@ -164,6 +171,14 @@ namespace World.Generation
             {
                 _meshFilter.mesh = new Mesh();
             }
+        }
+
+        void OnDrawGizmos()
+        {
+            Gizmos.color = Color.green;
+            Vector3 center = transform.position + new Vector3((chunkSize * voxelScale) / 2f, (chunkSize * voxelScale) / 2f, (chunkSize * voxelScale) / 2f);
+            Vector3 size = new Vector3(chunkSize * voxelScale, chunkSize * voxelScale, chunkSize * voxelScale);
+            Gizmos.DrawWireCube(center, size);
         }
     }
 }
