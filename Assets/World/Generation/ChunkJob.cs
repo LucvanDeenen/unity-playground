@@ -17,23 +17,18 @@ namespace World.Generation
 
         public struct BlockData
         {
-
-            public NativeArray<int3> Vertices { get; set; }
-            public NativeArray<int> Triangles { get; set; }
-
+            public NativeArray<int3> Vertices;
+            public NativeArray<int> Triangles;
         }
 
         public struct ChunkData
         {
-
-            public NativeArray<Block> Blocks { get; set; }
-
+            public NativeArray<Block> Blocks;
         }
 
         [ReadOnly] public int chunkSize;
         [ReadOnly] public int maxChunkHeight;
         [ReadOnly] public NativeArray<Block> Blocks;
-        [ReadOnly] public ChunkData chunkData;
         [ReadOnly] public BlockData blockData;
 
         // NativeQueues for thread-safe enqueueing
@@ -77,7 +72,7 @@ namespace World.Generation
             }
 
             int neighborIndex = BlockExtensions.GetBlockIndex(neighborPos, chunkSize, maxChunkHeight);
-            return chunkData.Blocks[neighborIndex].IsEmpty();
+            return Blocks[neighborIndex].IsEmpty();
         }
 
         private void CreateFace(Direction direction, int3 pos)

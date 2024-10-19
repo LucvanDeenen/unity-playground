@@ -1,11 +1,8 @@
 using System.Collections;
-
 using UnityEngine;
-using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
-
 using World.NoiseGeneration;
 
 namespace World.Generation
@@ -76,6 +73,10 @@ namespace World.Generation
             // Schedule BlockInitializationJob with dependency on HeightMapJob
             JobHandle blockInitJobHandle = blockInitJob.Schedule(chunkSize * chunkSize, 64, heightMapJobHandle);
 
+            // Create the queues outside the job
+            NativeQueue<int3> verticesQueue = new NativeQueue<int3>(Allocator.TempJob);
+            NativeQueue<int> trianglesQueue = new NativeQueue<int>(Allocator.TempJob);
+
             // Create ChunkJob
             ChunkJob chunkJob = new ChunkJob
             {
@@ -87,8 +88,8 @@ namespace World.Generation
                     Vertices = BlockData.Vertices,
                     Triangles = BlockData.Triangles
                 },
-                VerticesQueue = new NativeQueue<int3>(Allocator.TempJob).AsParallelWriter(),
-                TrianglesQueue = new NativeQueue<int>(Allocator.TempJob).AsParallelWriter()
+                VerticesQueue = verticesQueue.AsParallelWriter(),
+                TrianglesQueue = trianglesQueue.AsParallelWriter()
             };
 
             // Schedule ChunkJob with dependency on BlockInitializationJob
@@ -116,9 +117,6 @@ namespace World.Generation
             int currentVertexIndex = 0;
 
             // Access the queued vertices and triangles
-            NativeQueue<int3> verticesQueue = chunkJob.VerticesQueue.ToConcurrent().ToNativeQueue();
-            NativeQueue<int> trianglesQueue = chunkJob.TrianglesQueue.ToConcurrent().ToNativeQueue();
-
             while (verticesQueue.Count > 0)
             {
                 // Dequeue four vertices per face
@@ -153,8 +151,8 @@ namespace World.Generation
             }
 
             // Dispose of the queues
-            chunkJob.VerticesQueue.Dispose();
-            chunkJob.TrianglesQueue.Dispose();
+            verticesQueue.Dispose();
+            trianglesQueue.Dispose();
 
             // Create the final mesh
             var mesh = new Mesh
@@ -177,6 +175,7 @@ namespace World.Generation
             _meshFilter.mesh = mesh;
             _meshCollider.sharedMesh = mesh;
 
+            // Assign vertex colors based on height
             AssignVertexColors(mesh);
         }
 
@@ -224,12 +223,6 @@ namespace World.Generation
         public void AssignMeshCollider(bool enable)
         {
             _meshCollider.enabled = enable;
-        }
-
-        private Mesh SetMesh()
-        {
-            _meshRenderer.material = voxelMaterial;
-            return new Mesh();
         }
     }
 }

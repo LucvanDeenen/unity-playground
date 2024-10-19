@@ -26,11 +26,11 @@ namespace World.Generation
         private Dictionary<Vector3Int, GameObject> chunks = new Dictionary<Vector3Int, GameObject>();
         private Queue<GameObject> chunkPool = new Queue<GameObject>();
         private NoiseGenerator noiseGenerator;
-        
+
         private Camera mainCamera;
         private Plane[] frustumPlanes;
         private int colliderRadius = 1;
-        
+
 
         void Start()
         {
