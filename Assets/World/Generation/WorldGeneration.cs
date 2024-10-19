@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -21,18 +22,15 @@ namespace World.Generation
         public int chunkSize = 32;
         public int maxChunkHeight = 120;
 
-        [Header("Materials")]
-        public Material voxelMaterial;
-        public Gradient gradient;
-        public Color wall;
-
         private Dictionary<Vector3Int, MeshRenderer> renderers = new Dictionary<Vector3Int, MeshRenderer>();
         private Dictionary<Vector3Int, GameObject> chunks = new Dictionary<Vector3Int, GameObject>();
         private Queue<GameObject> chunkPool = new Queue<GameObject>();
         private NoiseGenerator noiseGenerator;
+        
         private Camera mainCamera;
         private Plane[] frustumPlanes;
-
+        private int colliderRadius = 1;
+        
 
         void Start()
         {
@@ -69,9 +67,10 @@ namespace World.Generation
                     currentChunkCoord = newChunkCoord;
                     LoadChunks();
                     UnloadChunks();
+                    UpdateMeshColliders();
                 }
 
-                yield return new WaitForSeconds(2f);
+                yield return new WaitForSeconds(0.5f);
             }
         }
 
@@ -182,6 +181,31 @@ namespace World.Generation
             }
         }
 
+
+        /// <summary>
+        /// Updates MeshCollider activation based on proximity to the player.
+        /// </summary>
+        void UpdateMeshColliders()
+        {
+            foreach (var kvp in chunks)
+            {
+                Vector3Int chunkCoord = kvp.Key;
+                GameObject chunk = kvp.Value;
+
+                int distanceX = Mathf.Abs(chunkCoord.x - currentChunkCoord.x);
+                int distanceZ = Mathf.Abs(chunkCoord.z - currentChunkCoord.y);
+
+                // Determine if the chunk is within the 1x1 radius
+                bool isWithinRadius = distanceX <= colliderRadius && distanceZ <= colliderRadius;
+
+                MeshCollider meshCollider = chunk.GetComponent<MeshCollider>();
+                if (meshCollider != null)
+                {
+                    meshCollider.enabled = isWithinRadius;
+                }
+            }
+        }
+
         /// <summary>
         /// Updates the visibility of all loaded chunks based on the camera's frustum.
         /// </summary>
@@ -195,6 +219,21 @@ namespace World.Generation
 
             foreach (var kvp in chunks)
             {
+                Vector3Int chunkCoord = kvp.Key;
+                GameObject chunk = kvp.Value;
+
+                int distanceX = Mathf.Abs(chunkCoord.x - currentChunkCoord.x);
+                int distanceZ = Mathf.Abs(chunkCoord.z - currentChunkCoord.y);
+
+                // Determine if the chunk is within the 1x1 radius
+                bool isWithinRadius = distanceX <= colliderRadius && distanceZ <= colliderRadius;
+
+                MeshCollider meshCollider = chunk.GetComponent<MeshCollider>();
+                if (meshCollider != null)
+                {
+                    meshCollider.enabled = isWithinRadius;
+                }
+
                 Vector3 chunkPos = kvp.Value.transform.position;
                 Vector3 chunkSizeVec = new Vector3(chunkSize * voxelScale, maxChunkHeight * voxelScale, chunkSize * voxelScale);
                 Bounds bounds = new Bounds(chunkPos + new Vector3(chunkSize * voxelScale / 2f, maxChunkHeight * voxelScale / 2f, chunkSize * voxelScale / 2f),

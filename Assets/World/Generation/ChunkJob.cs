@@ -32,6 +32,7 @@ namespace World.Generation
 
         [ReadOnly] public int chunkSize;
         [ReadOnly] public int maxChunkHeight;
+        [ReadOnly] public NativeArray<Block> Blocks;
         [ReadOnly] public ChunkData chunkData;
         [ReadOnly] public BlockData blockData;
 
@@ -41,15 +42,16 @@ namespace World.Generation
 
         public void Execute(int index)
         {
-            // Calculate x and z from the index
             int x = index / chunkSize;
             int z = index % chunkSize;
 
             for (int y = 0; y < maxChunkHeight; y++)
             {
                 int3 position = new int3(x, y, z);
-                int blockIndex = BlockExtensions.GetBlockIndex(new int3(x, y, z), chunkSize, maxChunkHeight);
-                if (chunkData.Blocks[blockIndex].IsEmpty()) continue;
+                int blockIndex = BlockExtensions.GetBlockIndex(position, chunkSize, maxChunkHeight);
+                Block block = Blocks[blockIndex];
+
+                if (block.IsEmpty()) continue;
 
                 for (int i = 0; i < 6; i++)
                 {

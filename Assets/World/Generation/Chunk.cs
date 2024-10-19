@@ -1,6 +1,7 @@
 using System.Collections;
 
 using UnityEngine;
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
@@ -26,6 +27,16 @@ namespace World.Generation
             this.maxChunkHeight = maxChunkHeight;
         }
 
+
+        [Header("Materials")]
+        public Gradient terrainGradient;
+        public Material voxelMaterial;
+        public Color wallColor;
+
+        private float gradientMaxHeight = 100f;
+        private float gradientMinHeight = 0f;
+
+        private MeshRenderer _meshRenderer;
         private MeshCollider _meshCollider;
         private MeshFilter _meshFilter;
 
@@ -33,70 +44,70 @@ namespace World.Generation
         {
             _meshCollider = GetComponent<MeshCollider>();
             _meshFilter = GetComponent<MeshFilter>();
+            _meshRenderer = GetComponent<MeshRenderer>();
         }
 
         public IEnumerator GenerateChunk()
         {
             _meshFilter.mesh = new Mesh();
 
-            // Generate the height map
-            float[,] heightMap = noiseGenerator.GenerateHeightMap(chunkCoord, chunkSize);
+            // Prepare NativeArray for height map
+            NativeArray<float> heightMapFlat = new NativeArray<float>(chunkSize * chunkSize, Allocator.TempJob);
 
-            // Initialize the blocks array
-            var blocks = new NativeArray<Block>(chunkSize * maxChunkHeight * chunkSize, Allocator.TempJob);
-            for (int x = 0; x < chunkSize; x++)
+            // Create HeightMapJob
+            HeightMapJob heightMapJob = new HeightMapJob();
+
+            // Schedule HeightMapJob through NoiseGenerator
+            JobHandle heightMapJobHandle = noiseGenerator.GenerateHeightMapAsync(chunkCoord, chunkSize, heightMapFlat, heightMapJob);
+
+            // Initialize NativeArray for blocks
+            NativeArray<Block> blocks = new NativeArray<Block>(chunkSize * maxChunkHeight * chunkSize, Allocator.TempJob);
+
+            // Create BlockInitializationJob
+            BlockInitializationJob blockInitJob = new BlockInitializationJob
             {
-                for (int z = 0; z < chunkSize; z++)
-                {
-                    float heightValue = heightMap[x, z];
-                    int yHeight = Mathf.FloorToInt(heightValue);
-
-                    for (int y = 0; y < maxChunkHeight; y++)
-                    {
-                        int index = BlockExtensions.GetBlockIndex(new int3(x, y, z), chunkSize, maxChunkHeight);
-                        blocks[index] = y <= yHeight ? Block.Ground : Block.Air;
-                    }
-                }
-            }
-
-            // Prepare block data
-            var blockData = new ChunkJob.BlockData
-            {
-                Vertices = BlockData.Vertices,
-                Triangles = BlockData.Triangles
-            };
-
-            // Initialize NativeQueues for vertices and triangles
-            var verticesQueue = new NativeQueue<int3>(Allocator.TempJob);
-            var trianglesQueue = new NativeQueue<int>(Allocator.TempJob);
-
-            // Prepare ChunkData
-            var chunkData = new ChunkJob.ChunkData
-            {
-                Blocks = blocks
-            };
-
-            // Schedule the parallel job
-            ChunkJob chunkJob = new ChunkJob
-            {
-                blockData = blockData,
-                chunkData = chunkData,
+                heightMapFlat = heightMapFlat,
                 chunkSize = chunkSize,
                 maxChunkHeight = maxChunkHeight,
-                VerticesQueue = verticesQueue.AsParallelWriter(),
-                TrianglesQueue = trianglesQueue.AsParallelWriter()
+                heightMultiplier = noiseGenerator.GetHeightMultiplier(),
+                blocks = blocks
             };
 
-            JobHandle jobHandle = chunkJob.Schedule(chunkSize * chunkSize, 256);
+            // Schedule BlockInitializationJob with dependency on HeightMapJob
+            JobHandle blockInitJobHandle = blockInitJob.Schedule(chunkSize * chunkSize, 64, heightMapJobHandle);
 
-            // Wait until the job is complete without blocking the main thread
-            while (!jobHandle.IsCompleted)
+            // Create ChunkJob
+            ChunkJob chunkJob = new ChunkJob
+            {
+                chunkSize = chunkSize,
+                maxChunkHeight = maxChunkHeight,
+                Blocks = blocks,
+                blockData = new ChunkJob.BlockData
+                {
+                    Vertices = BlockData.Vertices,
+                    Triangles = BlockData.Triangles
+                },
+                VerticesQueue = new NativeQueue<int3>(Allocator.TempJob).AsParallelWriter(),
+                TrianglesQueue = new NativeQueue<int>(Allocator.TempJob).AsParallelWriter()
+            };
+
+            // Schedule ChunkJob with dependency on BlockInitializationJob
+            JobHandle chunkJobHandle = chunkJob.Schedule(chunkSize * chunkSize, 64, blockInitJobHandle);
+
+            // Wait until the ChunkJob is complete without blocking the main thread
+            while (!chunkJobHandle.IsCompleted)
             {
                 yield return null;
             }
 
-            // Ensure the job is completed
-            jobHandle.Complete();
+            // Ensure all jobs are completed
+            chunkJobHandle.Complete();
+
+            // After ChunkJob is done, cache the height map
+            noiseGenerator.CacheHeightMap(chunkCoord, chunkSize, chunkSize, heightMapFlat);
+
+            // Dispose of the height map NativeArray
+            heightMapFlat.Dispose();
 
             // Combine all MeshData
             var combinedVertices = new NativeList<Vector3>(Allocator.Temp);
@@ -104,7 +115,10 @@ namespace World.Generation
 
             int currentVertexIndex = 0;
 
-            // Process all queued vertices and triangles using explicit loops
+            // Access the queued vertices and triangles
+            NativeQueue<int3> verticesQueue = chunkJob.VerticesQueue.ToConcurrent().ToNativeQueue();
+            NativeQueue<int> trianglesQueue = chunkJob.TrianglesQueue.ToConcurrent().ToNativeQueue();
+
             while (verticesQueue.Count > 0)
             {
                 // Dequeue four vertices per face
@@ -139,8 +153,8 @@ namespace World.Generation
             }
 
             // Dispose of the queues
-            verticesQueue.Dispose();
-            trianglesQueue.Dispose();
+            chunkJob.VerticesQueue.Dispose();
+            chunkJob.TrianglesQueue.Dispose();
 
             // Create the final mesh
             var mesh = new Mesh
@@ -159,9 +173,32 @@ namespace World.Generation
             mesh.RecalculateBounds();
             mesh.RecalculateTangents();
 
-            // Assign the mesh to the MeshFilter
-            _meshCollider.sharedMesh = mesh;
+            // Assign the mesh to the MeshFilter and MeshCollider
             _meshFilter.mesh = mesh;
+            _meshCollider.sharedMesh = mesh;
+
+            AssignVertexColors(mesh);
+        }
+
+        /// <summary>
+        /// Assigns vertex colors to the mesh based on their height using the defined gradient.
+        /// </summary>
+        /// <param name="mesh">The mesh to assign colors to.</param>
+        private void AssignVertexColors(Mesh mesh)
+        {
+            Vector3[] vertices = mesh.vertices;
+            Color[] colors = new Color[vertices.Length];
+
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                float height = vertices[i].y / voxelScale;
+                float normalizedHeight = Mathf.InverseLerp(gradientMinHeight, gradientMaxHeight, height);
+                normalizedHeight = Mathf.Clamp01(normalizedHeight);
+                Color vertexColor = terrainGradient.Evaluate(normalizedHeight);
+                colors[i] = vertexColor;
+            }
+
+            mesh.colors = colors;
         }
 
         public void ResetMesh()
@@ -182,6 +219,17 @@ namespace World.Generation
             Vector3 center = transform.position + new Vector3((chunkSize * voxelScale) / 2f, (maxChunkHeight * voxelScale) / 2f, (chunkSize * voxelScale) / 2f);
             Vector3 size = new Vector3(chunkSize * voxelScale, maxChunkHeight * voxelScale, chunkSize * voxelScale);
             Gizmos.DrawWireCube(center, size);
+        }
+
+        public void AssignMeshCollider(bool enable)
+        {
+            _meshCollider.enabled = enable;
+        }
+
+        private Mesh SetMesh()
+        {
+            _meshRenderer.material = voxelMaterial;
+            return new Mesh();
         }
     }
 }
