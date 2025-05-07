@@ -8,24 +8,12 @@ namespace World.Generation
     [BurstCompile]
     public struct ChunkJob : IJobParallelFor
     {
-        public struct MeshData
-        {
-
-            public NativeList<int3> Vertices { get; set; }
-            public NativeList<int> Triangles { get; set; }
-        }
-
         public struct BlockData
         {
-            public NativeArray<int3> Vertices;
-            public NativeArray<int> Triangles;
+            [ReadOnly] public NativeArray<int3> Vertices;
+            [ReadOnly] public NativeArray<int> Triangles;
         }
-
-        public struct ChunkData
-        {
-            public NativeArray<Block> Blocks;
-        }
-
+        
         [ReadOnly] public int chunkSize;
         [ReadOnly] public int maxChunkHeight;
         [ReadOnly] public NativeArray<Block> Blocks;
@@ -48,11 +36,12 @@ namespace World.Generation
 
                 if (block.IsEmpty()) continue;
 
+                // Iterate through all six directions
                 for (int i = 0; i < 6; i++)
                 {
-                    var direction = (Direction)i;
+                    Direction direction = (Direction)i;
 
-                    if (Check(direction, position))
+                    if (IsFaceVisible(direction, position))
                     {
                         CreateFace(direction, position);
                     }
@@ -60,7 +49,7 @@ namespace World.Generation
             }
         }
 
-        private bool Check(Direction direction, int3 pos)
+        private bool IsFaceVisible(Direction direction, int3 pos)
         {
             int3 neighborPos = BlockExtensions.GetPositionInDirection(direction, pos.x, pos.y, pos.z);
             if (neighborPos.x >= chunkSize || neighborPos.x < 0 ||
@@ -78,10 +67,11 @@ namespace World.Generation
         private void CreateFace(Direction direction, int3 pos)
         {
             // Retrieve face vertices using the block data
-            int3 v0 = blockData.Vertices[blockData.Triangles[(int)direction * 4 + 0]] + pos;
-            int3 v1 = blockData.Vertices[blockData.Triangles[(int)direction * 4 + 1]] + pos;
-            int3 v2 = blockData.Vertices[blockData.Triangles[(int)direction * 4 + 2]] + pos;
-            int3 v3 = blockData.Vertices[blockData.Triangles[(int)direction * 4 + 3]] + pos;
+            int baseIndex = (int)direction * 4;
+            int3 v0 = blockData.Vertices[blockData.Triangles[baseIndex + 0]] + pos;
+            int3 v1 = blockData.Vertices[blockData.Triangles[baseIndex + 1]] + pos;
+            int3 v2 = blockData.Vertices[blockData.Triangles[baseIndex + 2]] + pos;
+            int3 v3 = blockData.Vertices[blockData.Triangles[baseIndex + 3]] + pos;
 
             // Enqueue vertices
             VerticesQueue.Enqueue(v0);
@@ -89,7 +79,7 @@ namespace World.Generation
             VerticesQueue.Enqueue(v2);
             VerticesQueue.Enqueue(v3);
 
-            // Enqueue triangle indices as relative placeholders (0,1,2,0,2,3)
+            // Enqueue triangle indices (0,1,2,0,2,3) relative to current face's vertices
             TrianglesQueue.Enqueue(0);
             TrianglesQueue.Enqueue(1);
             TrianglesQueue.Enqueue(2);

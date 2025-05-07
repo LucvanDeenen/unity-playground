@@ -91,7 +91,6 @@ namespace World.NoiseGeneration
 
             // Schedule the job
             JobHandle jobHandle = heightMapJob.Schedule(chunkSize * chunkSize, 64);
-
             return jobHandle;
         }
 

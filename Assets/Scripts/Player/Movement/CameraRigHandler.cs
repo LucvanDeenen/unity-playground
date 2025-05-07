@@ -1,5 +1,5 @@
 using UnityEngine;
-using Cinemachine;
+using Unity.Cinemachine;
 
 public enum CameraSide
 {
@@ -15,7 +15,7 @@ public class CameraRigHandler : MonoBehaviour
 
     [Header("Setup")]
     [SerializeField] private PlayerController _playerController;
-    [SerializeField] private CinemachineFreeLook freeLookCamera;
+    [SerializeField][System.Obsolete] private CinemachineFreeLook freeLookCamera;
 
     private CinemachineCameraOffset _cameraOffsetExtension;
     private Vector3 _originalOffset;
@@ -47,7 +47,7 @@ public class CameraRigHandler : MonoBehaviour
             }
 
             // Store the original offset
-            _originalOffset = _cameraOffsetExtension.m_Offset;
+            _originalOffset = _cameraOffsetExtension.Offset;
 
             // Store original camera movement speeds
             _originalXAxisMaxSpeed = freeLookCamera.m_XAxis.m_MaxSpeed;
@@ -69,8 +69,8 @@ public class CameraRigHandler : MonoBehaviour
         float transitionSpeed = 5f;
 
         // Smoothly interpolate to the target offset
-        _cameraOffsetExtension.m_Offset = Vector3.Lerp(
-            _cameraOffsetExtension.m_Offset,
+        _cameraOffsetExtension.Offset = Vector3.Lerp(
+            _cameraOffsetExtension.Offset,
             targetOffset,
             Time.deltaTime * transitionSpeed
         );

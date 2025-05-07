@@ -22,6 +22,7 @@ namespace World.Generation
 
             float heightValue = heightMapFlat[index];
             float yHeight = math.floor(heightValue);
+            yHeight = math.clamp(yHeight, 0, maxChunkHeight - 1);
 
             for (int y = 0; y < maxChunkHeight; y++)
             {

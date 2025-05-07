@@ -36,45 +36,47 @@ namespace World.Generation
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void Initialize()
         {
-            Vertices = new NativeArray<int3>(8, Allocator.Persistent)
+            Vertices = new NativeArray<int3>(new int3[]
             {
-                [0] = new int3(1, 1, 1),
-                [1] = new int3(0, 1, 1),
-                [2] = new int3(0, 0, 1),
-                [3] = new int3(1, 0, 1),
-                [4] = new int3(0, 1, 0),
-                [5] = new int3(1, 1, 0),
-                [6] = new int3(1, 0, 0),
-                [7] = new int3(0, 0, 0)
-            };
+                // Front Face
+                new int3(0, 0, 0),
+                new int3(1, 0, 0),
+                new int3(1, 1, 0),
+                new int3(0, 1, 0),
 
-            Triangles = new NativeArray<int>(24, Allocator.Persistent)
+                // Back Face
+                new int3(0, 0, 1),
+                new int3(1, 0, 1),
+                new int3(1, 1, 1),
+                new int3(0, 1, 1)
+            }, Allocator.Persistent);
+
+            Triangles = new NativeArray<int>(new int[]
             {
-                [0] = 0,
-                [1] = 1,
-                [2] = 2,
-                [3] = 3,
-                [4] = 5,
-                [5] = 0,
-                [6] = 3,
-                [7] = 6,
-                [8] = 4,
-                [9] = 5,
-                [10] = 6,
-                [11] = 7,
-                [12] = 1,
-                [13] = 4,
-                [14] = 7,
-                [15] = 2,
-                [16] = 5,
-                [17] = 4,
-                [18] = 1,
-                [19] = 0,
-                [20] = 3,
-                [21] = 2,
-                [22] = 7,
-                [23] = 6
-            };
+                // Front Face
+                0, 1, 2,
+                0, 2, 3,
+
+                // Back Face
+                4, 6, 5,
+                4, 7, 6,
+
+                // Left Face
+                4, 5, 1,
+                4, 1, 0,
+
+                // Right Face
+                3, 2, 6,
+                3, 6, 7,
+
+                // Top Face
+                1, 5, 6,
+                1, 6, 2,
+
+                // Bottom Face
+                4, 0, 3,
+                4, 3, 7
+            }, Allocator.Persistent);
 
             AppDomain.CurrentDomain.DomainUnload += OnDomainUnload;
         }

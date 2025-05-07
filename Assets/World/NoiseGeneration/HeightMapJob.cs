@@ -1,7 +1,6 @@
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
-using Unity.Mathematics;
 
 namespace World.NoiseGeneration
 {
@@ -26,36 +25,57 @@ namespace World.NoiseGeneration
             int x = index / chunkSizeZ;
             int z = index % chunkSizeZ;
 
-            int worldX = x;
-            int worldZ = z;
+            float worldX = x + offsetX;
+            float worldZ = z + offsetZ;
 
-            float amplitude = 1f;
-            float frequency = 1f;
+            // float amplitude = 1f;
+            // float frequency = 1f;
             float noiseHeight = 0f;
 
-            for (int i = 0; i < octaves; i++)
+            // FastNoiseLite noise = new FastNoiseLite(42);
+            // noise.SetNoiseType(FastNoiseLite.NoiseType.Perlin);
+            // noise.SetFrequency(noiseScale);
+
+            // for (int i = 0; i < octaves; i++)
+            // {
+            //     float sampleX = worldX * frequency;
+            //     float sampleZ = worldZ * frequency;
+
+            //     float perlinValue = noise.GetNoise(sampleX, sampleZ);
+            //     perlinValue = (perlinValue + 1f) / 2f; // Normalize to 0-1
+
+            //     noiseHeight += perlinValue * amplitude;
+
+            //     amplitude *= persistence;
+            //     frequency *= lacunarity;
+            // }
+
+            float heightValue = noiseHeight * heightMultiplier;
+            heightMap[index] = heightValue;
+        }
+
+        public NativeArray<float> GenerateHeightMapMainThread()
+        {
+            NativeArray<float> heightMap = new NativeArray<float>(chunkSizeX * chunkSizeZ, Allocator.TempJob);
+
+            FastNoiseLite noise = new FastNoiseLite();
+            noise.SetSeed(seed);
+            noise.SetNoiseType(FastNoiseLite.NoiseType.Perlin);
+            noise.SetFrequency(noiseScale);
+
+            for (int i = 0; i < chunkSizeX; i++)
             {
-                float sampleX = (worldX + offsetX) * noiseScale * frequency;
-                float sampleZ = (worldZ + offsetZ) * noiseScale * frequency;
-
-                // To simulate Mathf.PerlinNoise, use math.sin and math.cos as a placeholder
-                // since Burst does not support Mathf.PerlinNoise. For actual Perlin noise,
-                // consider using a Burst-compatible noise library or implement Perlin noise manually.
-
-                // Placeholder noise function
-                float perlinValue = (math.sin(sampleX) + math.cos(sampleZ)) * 0.5f + 0.5f;
-                perlinValue *= 2f;
-
-                noiseHeight += perlinValue * amplitude;
-
-                amplitude *= persistence;
-                frequency *= lacunarity;
+                for (int j = 0; j < chunkSizeZ; j++)
+                {
+                    float sampleX = (i + offsetX) * noiseScale;
+                    float sampleZ = (j + offsetZ) * noiseScale;
+                    float perlinValue = noise.GetNoise(sampleX, sampleZ);
+                    perlinValue = (perlinValue + 1f) / 2f; // Normalize to 0-1
+                    heightMap[i * chunkSizeZ + j] = perlinValue * heightMultiplier;
+                }
             }
 
-            // Apply height multiplier
-            float heightValue = noiseHeight * heightMultiplier;
-
-            heightMap[index] = heightValue;
+            return heightMap;
         }
     }
 }

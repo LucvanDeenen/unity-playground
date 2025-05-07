@@ -24,24 +24,21 @@ namespace World.Generation
             this.maxChunkHeight = maxChunkHeight;
         }
 
-
-        [Header("Materials")]
-        public Gradient terrainGradient;
-        public Material voxelMaterial;
-        public Color wallColor;
-
-        private float gradientMaxHeight = 100f;
-        private float gradientMinHeight = 0f;
-
-        private MeshRenderer _meshRenderer;
         private MeshCollider _meshCollider;
         private MeshFilter _meshFilter;
+
+        [Header("Gradient Settings")]
+        [Tooltip("Minimum height for the gradient.")]
+        public float gradientMinHeight = 0f;
+        [Tooltip("Maximum height for the gradient.")]
+        public float gradientMaxHeight = 100f;
+        [Tooltip("Gradient to evaluate colors based on normalized height.")]
+        public Gradient terrainGradient;
 
         void Awake()
         {
             _meshCollider = GetComponent<MeshCollider>();
             _meshFilter = GetComponent<MeshFilter>();
-            _meshRenderer = GetComponent<MeshRenderer>();
         }
 
         public IEnumerator GenerateChunk()
@@ -66,14 +63,14 @@ namespace World.Generation
                 heightMapFlat = heightMapFlat,
                 chunkSize = chunkSize,
                 maxChunkHeight = maxChunkHeight,
-                heightMultiplier = noiseGenerator.GetHeightMultiplier(),
+                heightMultiplier = noiseGenerator.GetHeightMultiplier(), // Ensure this property exists and is accessible
                 blocks = blocks
             };
 
             // Schedule BlockInitializationJob with dependency on HeightMapJob
             JobHandle blockInitJobHandle = blockInitJob.Schedule(chunkSize * chunkSize, 64, heightMapJobHandle);
 
-            // Create the queues outside the job
+            // Create NativeQueues outside the job
             NativeQueue<int3> verticesQueue = new NativeQueue<int3>(Allocator.TempJob);
             NativeQueue<int> trianglesQueue = new NativeQueue<int>(Allocator.TempJob);
 
@@ -190,7 +187,7 @@ namespace World.Generation
 
             for (int i = 0; i < vertices.Length; i++)
             {
-                float height = vertices[i].y / voxelScale;
+                float height = vertices[i].y / voxelScale; // Revert scaling to original height
                 float normalizedHeight = Mathf.InverseLerp(gradientMinHeight, gradientMaxHeight, height);
                 normalizedHeight = Mathf.Clamp01(normalizedHeight);
                 Color vertexColor = terrainGradient.Evaluate(normalizedHeight);
@@ -218,11 +215,6 @@ namespace World.Generation
             Vector3 center = transform.position + new Vector3((chunkSize * voxelScale) / 2f, (maxChunkHeight * voxelScale) / 2f, (chunkSize * voxelScale) / 2f);
             Vector3 size = new Vector3(chunkSize * voxelScale, maxChunkHeight * voxelScale, chunkSize * voxelScale);
             Gizmos.DrawWireCube(center, size);
-        }
-
-        public void AssignMeshCollider(bool enable)
-        {
-            _meshCollider.enabled = enable;
         }
     }
 }
