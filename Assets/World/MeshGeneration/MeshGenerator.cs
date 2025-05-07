@@ -1,4 +1,7 @@
+using System;
+using Unity.Collections;
 using UnityEngine;
+using World.Terrain;
 
 namespace World.MeshGeneration
 {
@@ -11,15 +14,27 @@ namespace World.MeshGeneration
         private float gradientMaxHeight = 100f;
 
         private Gradient terrainGradient;
-        private float voxelScale;
-
         private Color wallColor;
+        private float voxelScale;
 
         public MeshGenerator(float voxelScale, Gradient terrainGradient, Color wallColor)
         {
             this.voxelScale = voxelScale;
             this.terrainGradient = terrainGradient;
             this.wallColor = wallColor;
+        }
+
+        public MeshData CreateMeshDataFromJob(NativeArray<VertexData> vertexData)
+        {
+            MeshData meshData = new MeshData();
+
+            foreach (var data in vertexData)
+            {
+                meshData.vertices.Add(data.position);
+                meshData.uvs.Add(data.uv);
+            }
+
+            return meshData;
         }
 
         /// <summary>

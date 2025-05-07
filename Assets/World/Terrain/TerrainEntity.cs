@@ -1,21 +1,20 @@
 using UnityEngine;
 using System.Collections.Generic;
-using World.Chunks;
 using World.Shared;
 
-namespace World.Managers
+namespace World.Terrain
 {
     /// <summary>
-    /// Represents a single terrain chunk.
+    /// Represents a single terrain entity.
     /// </summary>
-    public class Terrain
+    public class TerrainEntity
     {
-        public Dictionary<Vector2Int, TerrainChunk> chunks = new Dictionary<Vector2Int, TerrainChunk>();
+        public Dictionary<Vector2Int, Chunk> chunks = new Dictionary<Vector2Int, Chunk>();
         private ObjectPlacementManager placementManager;
         private int chunkSize;
         private float voxelScale;
 
-        public Terrain(ObjectPlacementManager placementManager, int chunkSize = 32, float voxelScale = 0.75f)
+        public TerrainEntity(ObjectPlacementManager placementManager, int chunkSize = 32, float voxelScale = 0.75f)
         {
             this.placementManager = placementManager;
             this.voxelScale = voxelScale;
@@ -57,7 +56,7 @@ namespace World.Managers
             }
         }
 
-        private void UnloadChunk(TerrainChunk chunk)
+        private void UnloadChunk(Chunk chunk)
         {
             foreach (Transform child in chunk.chunkObject.transform)
             {

@@ -10,6 +10,7 @@
         "**/*.prefab": true,
         "**/*.unity": true,
         "**/*.asmdef": true,
+        "**/*.wlt": true,
         "**/*.mask": true,
         "**/Temp": true,
         "**/Library": true,

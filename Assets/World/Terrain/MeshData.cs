@@ -1,9 +1,8 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-namespace World.MeshGeneration
+namespace World.Terrain
 {
-
     /// <summary>
     /// Represents mesh data for a terrain chunk.
     /// </summary>

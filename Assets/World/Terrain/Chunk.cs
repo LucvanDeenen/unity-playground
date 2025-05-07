@@ -1,12 +1,11 @@
 using UnityEngine;
-using World.MeshGeneration;
 
-namespace World.Chunks
+namespace World.Terrain
 {
     /// <summary>
     /// Represents a single terrain chunk.
     /// </summary>
-    public class TerrainChunk
+    public class Chunk
     {
         public Vector2Int chunkCoord;
         public int chunkSize;
@@ -19,7 +18,7 @@ namespace World.Chunks
         private bool isVisible = true;
         private const float maxViewDistance = 500f;
 
-        public TerrainChunk(Vector2Int coord, int size, float scale, Transform parent, Material material)
+        public Chunk(Vector2Int coord, int size, float scale, Transform parent, Material material)
         {
             chunkCoord = coord;
             chunkSize = size;
