@@ -16,5 +16,5 @@
         "**/Logs": true,
         "**/UserSettings": true
     },
-    "dotnet.defaultSolution": "CuberWorld.sln"
+    "dotnet.defaultSolution": "unity-side-project.slnx"
 }
