@@ -1,9 +1,9 @@
 ﻿<Solution>
   <Project Path="Assembly-CSharp.csproj" />
-  <Project Path="MeshGeneration.csproj" />
+  <Project Path="Shared.csproj" />
   <Project Path="Spawners.csproj" />
-  <Project Path="Managers.csproj" />
   <Project Path="NoiseGeneration.csproj" />
   <Project Path="Chunks.csproj" />
-  <Project Path="Shared.csproj" />
+  <Project Path="Managers.csproj" />
+  <Project Path="MeshGeneration.csproj" />
 </Solution>
