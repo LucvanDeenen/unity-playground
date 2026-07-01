@@ -1,5 +1,5 @@
 # Game Dev testing
-[ **[LICENSE](LICENSE)**]
+[ **[LICENSE](LICENSE)** ]
 
 Enjoy!
 
