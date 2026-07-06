@@ -113,7 +113,8 @@ namespace World.Spawners
                     if (noiseValue < SpawnThreshold)
                     {
                         int height = heightMap[x, z];
-                        float worldY = height * voxelScale;
+                        // The walkable surface is the top face of the block, one voxel above its base.
+                        float worldY = (height + 1) * voxelScale;
 
                         // Check if the height is within the desired range
                         if (worldY >= HeightRange.x && worldY <= HeightRange.y)
@@ -126,7 +127,7 @@ namespace World.Spawners
                             {
                                 // Create a deterministic random number generator
                                 int seed = noiseGenerator.Seed;
-                                int hash = seed + xCoord * 73856093 ^ zCoord * 19349663;
+                                int hash = (seed + xCoord * 73856093) ^ (zCoord * 19349663);
                                 System.Random prng = new System.Random(hash);
 
                                 // Randomly select a prefab

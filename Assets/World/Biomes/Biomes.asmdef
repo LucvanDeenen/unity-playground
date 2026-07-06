@@ -1,8 +1,8 @@
 {
-    "name": "MeshGeneration",
+    "name": "Biomes",
     "rootNamespace": "",
     "references": [
-        "GUID:5c5e625b138b4283968330666fea2f68"
+        "GUID:b055adf5ba7cdb8458fc721617cf61a8"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

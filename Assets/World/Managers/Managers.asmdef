@@ -2,6 +2,7 @@
     "name": "Managers",
     "rootNamespace": "",
     "references": [
+        "GUID:5c5e625b138b4283968330666fea2f68",
         "GUID:b055adf5ba7cdb8458fc721617cf61a8",
         "GUID:4a15413d2468c424185db2ad09d04cbe",
         "GUID:36a8f4a2e36718f45b3ec56ed16d3526",

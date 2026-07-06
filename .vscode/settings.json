@@ -16,5 +16,5 @@
         "**/Logs": true,
         "**/UserSettings": true
     },
-    "dotnet.defaultSolution": "unity-side-project.slnx"
+    "dotnet.defaultSolution": "unity-playground.slnx"
 }

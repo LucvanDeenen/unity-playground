@@ -1,10 +1,12 @@
 using UnityEngine;
+using UnityEngine.Rendering;
 using World.MeshGeneration;
 
 namespace World.Chunks
 {
     /// <summary>
-    /// Represents a single terrain chunk.
+    /// Represents a single terrain chunk. Culling is left to Unity's built-in
+    /// per-renderer frustum culling.
     /// </summary>
     public class TerrainChunk
     {
@@ -13,11 +15,6 @@ namespace World.Chunks
         public float voxelScale;
         public GameObject chunkObject;
         public Material voxelMaterial;
-
-        private Renderer[] renderers;
-        private Collider[] colliders;
-        private bool isVisible = true;
-        private const float maxViewDistance = 500f;
 
         public TerrainChunk(Vector2Int coord, int size, float scale, Transform parent, Material material)
         {
@@ -52,11 +49,13 @@ namespace World.Chunks
 
             Mesh mesh = new Mesh
             {
-                vertices = meshData.vertices.ToArray(),
-                triangles = meshData.triangles.ToArray(),
-                uv = meshData.uvs.ToArray(),
-                colors = meshData.colors.ToArray()
+                // Steep chunks (mountains) can exceed the default 16-bit vertex limit.
+                indexFormat = IndexFormat.UInt32
             };
+            mesh.SetVertices(meshData.vertices);
+            mesh.SetUVs(0, meshData.uvs);
+            mesh.SetColors(meshData.colors);
+            mesh.SetTriangles(meshData.triangles, 0);
             mesh.RecalculateNormals();
 
             meshFilter.mesh = mesh;
@@ -67,69 +66,6 @@ namespace World.Chunks
                 meshCollider = chunkObject.AddComponent<MeshCollider>();
             }
             meshCollider.sharedMesh = mesh;
-
-            // Update renderers and colliders arrays
-            renderers = chunkObject.GetComponentsInChildren<Renderer>();
-            colliders = chunkObject.GetComponentsInChildren<Collider>();
-        }
-
-        /// <summary>
-        /// Updates the visibility of the chunk based on the camera's position and view frustum.
-        /// </summary>
-        /// <param name="cameraTransform">The transform of the player's camera.</param>
-        public void UpdateVisibility(Transform cameraTransform)
-        {
-            float distance = Vector3.Distance(cameraTransform.position, chunkObject.transform.position);
-
-            if (distance > maxViewDistance)
-            {
-                if (isVisible)
-                {
-                    isVisible = false;
-                    SetRenderersEnabled(false);
-                }
-                return;
-            }
-
-            Plane[] planes = GeometryUtility.CalculateFrustumPlanes(Camera.main);
-
-            Bounds combinedBounds = new Bounds(chunkObject.transform.position, Vector3.zero);
-
-            foreach (var renderer in renderers)
-            {
-                combinedBounds.Encapsulate(renderer.bounds);
-            }
-
-            bool currentlyVisible = GeometryUtility.TestPlanesAABB(planes, combinedBounds);
-
-            if (currentlyVisible != isVisible)
-            {
-                isVisible = currentlyVisible;
-                SetRenderersEnabled(isVisible);
-            }
-        }
-
-        /// <summary>
-        /// Enables or disables the renderers and colliders in the chunk.
-        /// </summary>
-        /// <param name="enabled">Whether to enable or disable the renderers and colliders.</param>
-        private void SetRenderersEnabled(bool enabled)
-        {
-            if (renderers != null)
-            {
-                foreach (var renderer in renderers)
-                {
-                    renderer.enabled = enabled;
-                }
-            }
-
-            if (colliders != null)
-            {
-                foreach (var collider in colliders)
-                {
-                    collider.enabled = enabled;
-                }
-            }
         }
 
         /// <summary>

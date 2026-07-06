@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using World.Biomes;
 using World.MeshGeneration;
 using World.NoiseGeneration;
 using World.Chunks;
@@ -10,6 +11,8 @@ namespace World.Managers
 {
     /// <summary>
     /// Abstract base class for managing terrain chunks around the player.
+    /// Chunk generation is time-sliced: missing chunks are queued nearest-first
+    /// and generated a few per frame to avoid hitches when crossing chunk borders.
     /// </summary>
     public abstract class TerrainManager : MonoBehaviour
     {
@@ -19,8 +22,14 @@ namespace World.Managers
         [Header("Terrain Settings")]
         public int seed = 42;
         public Material voxelMaterial;
-        public Gradient terrainGradient;
-        public Color wallColor = new Color(0.5f, 0.3f, 0.2f);
+        [Tooltip("How many chunks may be generated per frame.")]
+        public int chunksPerFrame = 4;
+
+        [Header("Biome Settings")]
+        [Tooltip("Leave empty to use the built-in defaults. Right-click the component header and choose 'Populate Default Biomes' to edit them here.")]
+        public List<BiomeDefinition> biomes = new List<BiomeDefinition>();
+        [Tooltip("Height in blocks reserved as the future water level; unused until water is added.")]
+        public float seaLevel = 8f;
 
         [Header("Spawners")]
         public List<Spawner> spawners = new List<Spawner>();
@@ -34,7 +43,11 @@ namespace World.Managers
 
         protected ObjectPlacementManager placementManager;
         protected NoiseGenerator noiseGenerator;
+        protected BiomeGenerator biomeGenerator;
         protected MeshGenerator meshGenerator;
+
+        private readonly Queue<Vector2Int> pendingChunks = new Queue<Vector2Int>();
+        private readonly List<Vector2Int> missingChunkBuffer = new List<Vector2Int>();
 
         protected virtual void Start()
         {
@@ -47,9 +60,13 @@ namespace World.Managers
 
             placementManager = GetComponent<ObjectPlacementManager>();
 
-            // Initialize NoiseGenerator and MeshGenerator with parameters
             noiseGenerator = new NoiseGenerator(seed);
-            meshGenerator = new MeshGenerator(voxelScale, terrainGradient, wallColor);
+            if (biomes == null || biomes.Count == 0)
+            {
+                biomes = BiomeDefaults.CreateDefaults();
+            }
+            biomeGenerator = new BiomeGenerator(noiseGenerator, biomes, seaLevel);
+            meshGenerator = new MeshGenerator(voxelScale);
 
             foreach (Spawner spawner in spawners)
             {
@@ -61,54 +78,104 @@ namespace World.Managers
             }
 
             lastPlayerChunkCoord = GetChunkCoordFromPosition(player.position);
-            UpdateChunks();
+            RefreshPendingChunks(lastPlayerChunkCoord);
+
+            // Generate the closest ring synchronously so the player starts on solid ground.
+            GeneratePendingChunks(9);
         }
 
         /// <summary>
         /// Updates the active terrain chunks based on the player's current position.
+        /// Call once per frame.
         /// </summary>
         protected void UpdateChunks()
         {
             Vector2Int playerChunkCoord = GetChunkCoordFromPosition(player.position);
 
-            HashSet<Vector2Int> activeChunks = new HashSet<Vector2Int>();
+            if (playerChunkCoord != lastPlayerChunkCoord)
+            {
+                lastPlayerChunkCoord = playerChunkCoord;
+                RefreshPendingChunks(playerChunkCoord);
+                UnloadDistantChunks(playerChunkCoord);
+            }
+
+            GeneratePendingChunks(chunksPerFrame);
+        }
+
+        /// <summary>
+        /// Rebuilds the queue of chunks that are in range but not yet generated, nearest first.
+        /// </summary>
+        private void RefreshPendingChunks(Vector2Int center)
+        {
+            pendingChunks.Clear();
+            missingChunkBuffer.Clear();
 
             for (int xOffset = -renderDistance; xOffset <= renderDistance; xOffset++)
             {
                 for (int zOffset = -renderDistance; zOffset <= renderDistance; zOffset++)
                 {
-                    Vector2Int chunkCoord = new Vector2Int(playerChunkCoord.x + xOffset, playerChunkCoord.y + zOffset);
-                    activeChunks.Add(chunkCoord);
-
+                    Vector2Int chunkCoord = new Vector2Int(center.x + xOffset, center.y + zOffset);
                     if (!chunkDictionary.ContainsKey(chunkCoord))
                     {
-                        // Generate and store new chunk.
-                        TerrainChunk chunk = new TerrainChunk(chunkCoord, chunkSize, voxelScale, transform, voxelMaterial);
-                        GenerateChunk(chunk);
-                        chunkDictionary.Add(chunkCoord, chunk);
+                        missingChunkBuffer.Add(chunkCoord);
                     }
                 }
             }
 
-            // Remove chunks that are no longer within the render distance.
-            List<Vector2Int> chunksToRemove = new List<Vector2Int>();
-            foreach (var chunk in chunkDictionary)
+            missingChunkBuffer.Sort((a, b) => (a - center).sqrMagnitude.CompareTo((b - center).sqrMagnitude));
+
+            foreach (Vector2Int chunkCoord in missingChunkBuffer)
             {
-                if (!activeChunks.Contains(chunk.Key))
+                pendingChunks.Enqueue(chunkCoord);
+            }
+        }
+
+        /// <summary>
+        /// Generates up to the given number of queued chunks.
+        /// </summary>
+        private void GeneratePendingChunks(int budget)
+        {
+            while (budget > 0 && pendingChunks.Count > 0)
+            {
+                Vector2Int chunkCoord = pendingChunks.Dequeue();
+                if (chunkDictionary.ContainsKey(chunkCoord))
                 {
-                    UnloadChunk(chunk.Value);
-                    chunksToRemove.Add(chunk.Key);
+                    continue;
+                }
+
+                TerrainChunk chunk = new TerrainChunk(chunkCoord, chunkSize, voxelScale, transform, voxelMaterial);
+                GenerateChunk(chunk);
+                chunkDictionary.Add(chunkCoord, chunk);
+                budget--;
+            }
+        }
+
+        /// <summary>
+        /// Unloads chunks that are no longer within the render distance.
+        /// </summary>
+        private void UnloadDistantChunks(Vector2Int center)
+        {
+            List<Vector2Int> chunksToRemove = new List<Vector2Int>();
+            foreach (var pair in chunkDictionary)
+            {
+                Vector2Int offset = pair.Key - center;
+                if (Mathf.Abs(offset.x) > renderDistance || Mathf.Abs(offset.y) > renderDistance)
+                {
+                    UnloadChunk(pair.Value);
+                    chunksToRemove.Add(pair.Key);
                 }
             }
-            foreach (var coord in chunksToRemove)
-            {
-                chunkDictionary.Remove(coord);
-            }
 
-            foreach (var chunk in chunkDictionary.Values)
+            foreach (Vector2Int chunkCoord in chunksToRemove)
             {
-                chunk.UpdateVisibility(player);
+                chunkDictionary.Remove(chunkCoord);
             }
+        }
+
+        [ContextMenu("Populate Default Biomes")]
+        private void PopulateDefaultBiomes()
+        {
+            biomes = BiomeDefaults.CreateDefaults();
         }
 
         /// <summary>

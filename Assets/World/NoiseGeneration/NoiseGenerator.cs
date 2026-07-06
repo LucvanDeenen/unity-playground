@@ -3,115 +3,124 @@ using UnityEngine;
 namespace World.NoiseGeneration
 {
     /// <summary>
-    /// Generates noise values for terrain generation.
+    /// Provides seeded, decorrelated noise channels for terrain and climate generation.
     /// </summary>
     public class NoiseGenerator
     {
-        // Noise settings for regular terrain
-        private float noiseScale = 0.005f;
-        private float persistence = 0.5f;
-        private float lacunarity = 2f;
-        private int octaves = 4;
-        private float heightMultiplier = 15f;
-
-        private System.Random prng;
-        private float offsetX;
-        private float offsetZ;
-        private int seed;
-
-        public int Seed => seed; // Add a public property to get the seed
-
         /// <summary>
-        /// Initializes the NoiseGenerator with a specific seed.
+        /// A fractal noise field with its own seed-derived offsets, so channels
+        /// sampled at the same coordinates stay independent of each other.
         /// </summary>
-        /// <param name="seed">Seed for noise generation.</param>
-        public NoiseGenerator(int seed)
+        public class Channel
         {
-            this.seed = seed;
-            InitializeRandomOffsets();
-        }
+            private readonly float scale;
+            private readonly int octaves;
+            private readonly float persistence;
+            private readonly float lacunarity;
+            private readonly float offsetX;
+            private readonly float offsetZ;
 
-        /// <summary>
-        /// Initializes random offsets based on the seed to ensure unique terrain generation.
-        /// </summary>
-        private void InitializeRandomOffsets()
-        {
-            prng = new System.Random(seed);
-            offsetX = prng.Next(-100000, 100000);
-            offsetZ = prng.Next(-100000, 100000);
-        }
-
-        /// <summary>
-        /// Generates a height map using multi-octave Perlin noise for regular terrain.
-        /// </summary>
-        /// <param name="width">Width of the height map.</param>
-        /// <param name="height">Height of the height map.</param>
-        /// <param name="chunkCoord">Chunk coordinates.</param>
-        /// <param name="chunkSize">Size of the chunk.</param>
-        /// <returns>2D array representing the height map.</returns>
-        public float[,] GenerateHeightMap(int width, int height, Vector2Int chunkCoord, int chunkSize)
-        {
-            float[,] heightMap = new float[width, height];
-            for (int x = 0; x < width; x++)
+            internal Channel(System.Random prng, float scale, int octaves, float persistence = 0.5f, float lacunarity = 2f)
             {
-                for (int z = 0; z < height; z++)
-                {
-                    int worldX = chunkCoord.x * chunkSize + x;
-                    int worldZ = chunkCoord.y * chunkSize + z;
-
-                    float amplitude = 1f;
-                    float frequency = 1f;
-                    float noiseHeight = 0f;
-
-                    for (int i = 0; i < octaves; i++)
-                    {
-                        float sampleX = (worldX + offsetX) * noiseScale * frequency;
-                        float sampleZ = (worldZ + offsetZ) * noiseScale * frequency;
-
-                        float perlinValue = Mathf.PerlinNoise(sampleX, sampleZ) * 2;
-                        noiseHeight += perlinValue * amplitude;
-
-                        amplitude *= persistence;
-                        frequency *= lacunarity;
-                    }
-
-                    // Apply height multiplier
-                    float heightValue = noiseHeight * heightMultiplier;
-                    heightMap[x, z] = heightValue;
-                }
+                this.scale = scale;
+                this.octaves = octaves;
+                this.persistence = persistence;
+                this.lacunarity = lacunarity;
+                offsetX = prng.Next(-100000, 100000);
+                offsetZ = prng.Next(-100000, 100000);
             }
 
-            return heightMap;
+            /// <summary>
+            /// Samples the fractal noise, normalized to 0..1.
+            /// </summary>
+            public float Sample01(float x, float z)
+            {
+                return Sample01(x, z, scale);
+            }
+
+            /// <summary>
+            /// Samples the fractal noise at an overridden scale, normalized to 0..1.
+            /// </summary>
+            public float Sample01(float x, float z, float scaleOverride)
+            {
+                float amplitude = 1f;
+                float frequency = 1f;
+                float total = 0f;
+                float maxTotal = 0f;
+
+                for (int i = 0; i < octaves; i++)
+                {
+                    float sampleX = (x + offsetX) * scaleOverride * frequency;
+                    float sampleZ = (z + offsetZ) * scaleOverride * frequency;
+
+                    total += Mathf.PerlinNoise(sampleX, sampleZ) * amplitude;
+                    maxTotal += amplitude;
+
+                    amplitude *= persistence;
+                    frequency *= lacunarity;
+                }
+
+                return total / maxTotal;
+            }
+
+            /// <summary>
+            /// Samples smooth and ridged variants of the same fractal in one pass.
+            /// The ridged variant peaks where the noise crosses its midline, which
+            /// produces sharp crests when used for mountainous terrain.
+            /// </summary>
+            public void SampleSmoothAndRidged(float x, float z, out float smooth01, out float ridged01)
+            {
+                float amplitude = 1f;
+                float frequency = 1f;
+                float smoothTotal = 0f;
+                float ridgedTotal = 0f;
+                float maxTotal = 0f;
+
+                for (int i = 0; i < octaves; i++)
+                {
+                    float sampleX = (x + offsetX) * scale * frequency;
+                    float sampleZ = (z + offsetZ) * scale * frequency;
+
+                    float value = Mathf.PerlinNoise(sampleX, sampleZ);
+                    smoothTotal += value * amplitude;
+                    ridgedTotal += (1f - Mathf.Abs(2f * value - 1f)) * amplitude;
+                    maxTotal += amplitude;
+
+                    amplitude *= persistence;
+                    frequency *= lacunarity;
+                }
+
+                smooth01 = smoothTotal / maxTotal;
+                ridged01 = ridgedTotal / maxTotal;
+            }
+        }
+
+        public Channel Height { get; }
+        public Channel Temperature { get; }
+        public Channel Moisture { get; }
+        public Channel Relief { get; }
+
+        public int Seed { get; }
+
+        public NoiseGenerator(int seed)
+        {
+            Seed = seed;
+            System.Random prng = new System.Random(seed);
+            Height = new Channel(prng, 0.005f, 4);
+            Temperature = new Channel(prng, 0.0015f, 2);
+            Moisture = new Channel(prng, 0.0015f, 2);
+            Relief = new Channel(prng, 0.002f, 3);
         }
 
         /// <summary>
-        /// Gets a normalized noise value between 0 and 1.
+        /// Gets a normalized noise value between 0 and 1. Used by spawners for
+        /// clustering; samples the height channel, optionally at another scale.
         /// </summary>
         public float GetNormalizedNoiseValue(float x, float z, float noiseScaleOverride = -1f)
         {
-            float amplitude = 1f;
-            float frequency = 1f;
-            float noiseHeight = 0f;
-            float maxPossibleHeight = 0f;
-
-            float usedNoiseScale = (noiseScaleOverride > 0f) ? noiseScaleOverride : this.noiseScale;
-
-            for (int i = 0; i < octaves; i++)
-            {
-                float sampleX = (x + offsetX) * usedNoiseScale * frequency;
-                float sampleZ = (z + offsetZ) * usedNoiseScale * frequency;
-
-                float perlinValue = Mathf.PerlinNoise(sampleX, sampleZ);
-                noiseHeight += perlinValue * amplitude;
-
-                maxPossibleHeight += amplitude;
-
-                amplitude *= persistence;
-                frequency *= lacunarity;
-            }
-
-            return noiseHeight / maxPossibleHeight;
+            return noiseScaleOverride > 0f
+                ? Height.Sample01(x, z, noiseScaleOverride)
+                : Height.Sample01(x, z);
         }
-
     }
 }

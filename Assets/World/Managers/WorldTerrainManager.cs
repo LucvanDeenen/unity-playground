@@ -1,5 +1,5 @@
 using UnityEngine;
-using World.MeshGeneration;
+using World.Biomes;
 using World.Chunks;
 using World.Spawners;
 
@@ -23,31 +23,19 @@ namespace World.Managers
 
         protected override void GenerateChunk(TerrainChunk chunk)
         {
-            // Generate height map
-            float[,] heightMapFloat = noiseGenerator.GenerateHeightMap(chunk.chunkSize + 1, chunk.chunkSize + 1, chunk.chunkCoord, chunk.chunkSize);
+            // Generate biome-blended heights and colors
+            ChunkData chunkData = biomeGenerator.GenerateChunkData(chunk.chunkCoord, chunk.chunkSize);
 
-            // Convert float[,] heightMap to int[,]
-            int[,] heightMapInt = new int[chunk.chunkSize + 1, chunk.chunkSize + 1];
-            for (int x = 0; x <= chunk.chunkSize; x++)
-            {
-                for (int z = 0; z <= chunk.chunkSize; z++)
-                {
-                    heightMapInt[x, z] = Mathf.RoundToInt(heightMapFloat[x, z]);
-                }
-            }
-
-            // Generate mesh data
-            MeshData meshData = meshGenerator.GenerateMeshData(heightMapFloat);
-
-            // Update chunk mesh
-            chunk.UpdateChunkMesh(meshData);
+            // Build and apply the chunk mesh
+            chunk.UpdateChunkMesh(meshGenerator.GenerateMeshData(chunkData));
 
             // Spawn objects
+            int[,] heightMap = chunkData.BuildHeightMapInt();
             foreach (Spawner spawner in spawners)
             {
                 if (spawner != null)
                 {
-                    spawner.Spawn(chunk.chunkObject, heightMapInt, voxelScale, chunk.chunkSize, chunk.chunkCoord);
+                    spawner.Spawn(chunk.chunkObject, heightMap, voxelScale, chunk.chunkSize, chunk.chunkCoord);
                 }
             }
         }
