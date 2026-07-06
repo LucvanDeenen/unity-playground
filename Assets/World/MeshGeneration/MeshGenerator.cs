@@ -8,11 +8,19 @@ namespace World.MeshGeneration
     /// </summary>
     public class MeshGenerator
     {
-        private readonly float voxelScale;
+        // Blocks below the surface that keep the (darkened) surface color, so
+        // grass wraps over terrace edges; then a band of the biome cliff color;
+        // anything deeper is bare rock.
+        private const int SurfaceWrapDepth = 1;
+        private const int CliffBandDepth = 4;
 
-        public MeshGenerator(float voxelScale)
+        private readonly float voxelScale;
+        private readonly Color rockColor;
+
+        public MeshGenerator(float voxelScale, Color rockColor)
         {
             this.voxelScale = voxelScale;
+            this.rockColor = rockColor;
         }
 
         /// <summary>
@@ -35,10 +43,10 @@ namespace World.MeshGeneration
 
                     AddVoxelFace(meshData, new Vector3(x, topY, z) * voxelScale, Vector3.up, column.surfaceColor);
 
-                    AddExposedSideFaces(meshData, chunkData, x, z, topY, Vector3.left, x - 1, z, column.cliffColor);
-                    AddExposedSideFaces(meshData, chunkData, x, z, topY, Vector3.right, x + 1, z, column.cliffColor);
-                    AddExposedSideFaces(meshData, chunkData, x, z, topY, Vector3.back, x, z - 1, column.cliffColor);
-                    AddExposedSideFaces(meshData, chunkData, x, z, topY, Vector3.forward, x, z + 1, column.cliffColor);
+                    AddExposedSideFaces(meshData, chunkData, x, z, topY, Vector3.left, x - 1, z, column);
+                    AddExposedSideFaces(meshData, chunkData, x, z, topY, Vector3.right, x + 1, z, column);
+                    AddExposedSideFaces(meshData, chunkData, x, z, topY, Vector3.back, x, z - 1, column);
+                    AddExposedSideFaces(meshData, chunkData, x, z, topY, Vector3.forward, x, z + 1, column);
                 }
             }
 
@@ -50,14 +58,30 @@ namespace World.MeshGeneration
         /// Columns whose neighbor is equal or higher emit nothing; the taller
         /// neighbor draws the shared wall from its own side.
         /// </summary>
-        private void AddExposedSideFaces(MeshData meshData, ChunkData chunkData, int x, int z, int topY, Vector3 direction, int neighborX, int neighborZ, Color color)
+        private void AddExposedSideFaces(MeshData meshData, ChunkData chunkData, int x, int z, int topY, Vector3 direction, int neighborX, int neighborZ, BiomeColumn column)
         {
             int neighborTopY = Mathf.FloorToInt(chunkData.GetColumn(neighborX, neighborZ).height);
 
             for (int y = Mathf.Max(0, neighborTopY + 1); y <= topY; y++)
             {
-                AddVoxelFace(meshData, new Vector3(x, y, z) * voxelScale, direction, color);
+                AddVoxelFace(meshData, new Vector3(x, y, z) * voxelScale, direction, GetSideColor(column, topY - y));
             }
+        }
+
+        /// <summary>
+        /// Picks the wall color by depth below the surface: surface color wraps
+        /// over shallow steps, tall walls turn to bare rock.
+        /// </summary>
+        private Color GetSideColor(BiomeColumn column, int depth)
+        {
+            if (depth <= SurfaceWrapDepth)
+            {
+                Color wrapped = column.surfaceColor * 0.8f;
+                wrapped.a = 1f;
+                return wrapped;
+            }
+
+            return depth <= CliffBandDepth ? column.cliffColor : rockColor;
         }
 
         /// <summary>

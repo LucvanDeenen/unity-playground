@@ -530,10 +530,22 @@ MonoBehaviour:
   seed: 42
   voxelMaterial: {fileID: 2100000, guid: 7c480906a069a8a4b9b111d94052f14d, type: 2}
   chunksPerFrame: 4
+  voxelScale: 1
+  terraceHeight: 8
+  rockColor: {r: 0.55, g: 0.55, b: 0.58, a: 1}
+  generatePaths: 1
+  pathColor: {r: 0.93, g: 0.8, b: 0.5, a: 1}
+  pathWidth: 5
+  pathDepth: 1
   biomes: []
   seaLevel: 8
   spawners:
   - {fileID: 1844900049}
+  configureFog: 1
+  fogColor: {r: 0.55, g: 0.7, b: 0.97, a: 1}
+  fogStartFraction: 0.45
+  fogEndFraction: 0.92
+  configureAmbientLight: 1
 --- !u!114 &1844900049
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -543,16 +555,33 @@ MonoBehaviour:
   m_GameObject: {fileID: 1844900039}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d7911cc4a7e2c6b4591d02916bb3db09, type: 3}
+  m_Script: {fileID: 11500000, guid: a5e9a0d7d7774ebcb6ef71f4983c51f8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   treePrefabs:
   - {fileID: 1837254904635664397, guid: 6d8e5af1a9e5d444bad8100d0b01b1cf, type: 3}
-  heightRange: {x: 10, y: 50}
-  minDistanceBetweenTrees: 10
-  spawnChance: 0.25
-  spawnThreshold: 0.3
-  noiseScale: 0.05
+  treeSettings:
+    minSpacing: 4.5
+    clusterNoiseScale: 0.05
+    clusterWindow: {x: 0.35, y: 0.6}
+    maxSlope: 1
+    maxHeightBlocks: 30
+  grassPrefabs:
+  - {fileID: 919132149155446097, guid: 7ce7b2bfdb4e4f24a8184f3f1b4e1d0b, type: 3}
+  grassSettings:
+    minSpacing: 1.5
+    clusterNoiseScale: 0.08
+    clusterWindow: {x: 0.25, y: 0.5}
+    maxSlope: 2
+    maxHeightBlocks: 40
+  boulderPrefabs:
+  - {fileID: 293041722503904514, guid: 7b7fb1f52f010344fb9a03fad8990318, type: 3}
+  boulderSettings:
+    minSpacing: 10
+    clusterNoiseScale: 0.03
+    clusterWindow: {x: 0.45, y: 0.7}
+    maxSlope: 3
+    maxHeightBlocks: 999
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

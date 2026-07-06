@@ -3,8 +3,8 @@ using UnityEngine;
 namespace World.Biomes
 {
     /// <summary>
-    /// Per-column result of biome generation: blended height and colors, plus the
-    /// dominant biome for discrete decisions like vegetation selection.
+    /// Per-column result of biome generation: blended height, colors, and vegetation
+    /// densities, plus the dominant biome for discrete decisions.
     /// </summary>
     public struct BiomeColumn
     {
@@ -12,6 +12,12 @@ namespace World.Biomes
         public float height;
         public Color surfaceColor;
         public Color cliffColor;
+        /// <summary>Blended per-column vegetation densities (0..1 chance per sample cell).</summary>
+        public float treeDensity;
+        public float grassDensity;
+        public float boulderDensity;
+        /// <summary>1 on the centerline of a trail, fading to 0 at its edge.</summary>
+        public float pathMask;
         /// <summary>Index into the manager's biome list.</summary>
         public byte dominantBiome;
         /// <summary>Normalized weight of the dominant biome; falls toward 0.5 at borders.</summary>
@@ -47,23 +53,6 @@ namespace World.Biomes
         public void SetColumn(int x, int z, BiomeColumn column)
         {
             columns[(x + 1) + (z + 1) * stride] = column;
-        }
-
-        /// <summary>
-        /// Builds the integer height map (in blocks) consumed by spawners.
-        /// </summary>
-        public int[,] BuildHeightMapInt()
-        {
-            int[,] heightMap = new int[chunkSize + 1, chunkSize + 1];
-            for (int x = 0; x <= chunkSize; x++)
-            {
-                for (int z = 0; z <= chunkSize; z++)
-                {
-                    heightMap[x, z] = Mathf.FloorToInt(GetColumn(x, z).height);
-                }
-            }
-
-            return heightMap;
         }
     }
 }

@@ -99,6 +99,7 @@ namespace World.NoiseGeneration
         public Channel Temperature { get; }
         public Channel Moisture { get; }
         public Channel Relief { get; }
+        public Channel Paths { get; }
 
         public int Seed { get; }
 
@@ -106,10 +107,15 @@ namespace World.NoiseGeneration
         {
             Seed = seed;
             System.Random prng = new System.Random(seed);
-            Height = new Channel(prng, 0.005f, 4);
-            Temperature = new Channel(prng, 0.0015f, 2);
-            Moisture = new Channel(prng, 0.0015f, 2);
-            Relief = new Channel(prng, 0.002f, 3);
+            // Broad, low-persistence height noise gives gradual Cube World-style
+            // slopes that quantize into terraces instead of noisy bumps.
+            Height = new Channel(prng, 0.0035f, 4, 0.48f);
+            // Climate varies over very large distances so single biomes span
+            // whole regions instead of patchworking within one view.
+            Temperature = new Channel(prng, 0.0008f, 2);
+            Moisture = new Channel(prng, 0.0008f, 2);
+            Relief = new Channel(prng, 0.0012f, 3);
+            Paths = new Channel(prng, 0.004f, 2);
         }
 
         /// <summary>

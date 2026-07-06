@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering;
 using System.Collections.Generic;
 using World.Biomes;
 using World.MeshGeneration;
@@ -24,6 +25,21 @@ namespace World.Managers
         public Material voxelMaterial;
         [Tooltip("How many chunks may be generated per frame.")]
         public int chunksPerFrame = 4;
+        [Tooltip("World size of one block; around half the player's height gives the Cube World feel.")]
+        public float voxelScale = 1f;
+        [Tooltip("Terrain snaps to flat treads with risers of this many blocks; 0 disables terracing.")]
+        [Range(0f, 8f)] public float terraceHeight = 4f;
+        [Tooltip("Color of tall exposed walls; shallow steps keep the surface color.")]
+        public Color rockColor = new Color(0.55f, 0.55f, 0.58f);
+
+        [Header("Paths")]
+        [Tooltip("Weave winding trails through the terrain colors.")]
+        public bool generatePaths = true;
+        public Color pathColor = new Color(0.93f, 0.8f, 0.5f);
+        [Tooltip("Approximate trail width in blocks.")]
+        [Range(1f, 8f)] public float pathWidth = 5f;
+        [Tooltip("How many blocks trails sink below the surrounding terrain.")]
+        [Range(0f, 3f)] public float pathDepth = 1f;
 
         [Header("Biome Settings")]
         [Tooltip("Leave empty to use the built-in defaults. Right-click the component header and choose 'Populate Default Biomes' to edit them here.")]
@@ -34,10 +50,18 @@ namespace World.Managers
         [Header("Spawners")]
         public List<Spawner> spawners = new List<Spawner>();
 
+        [Header("Atmosphere")]
+        [Tooltip("Configure linear distance fog matched to the loaded chunk radius, hiding chunk and vegetation pop-in.")]
+        public bool configureFog = true;
+        public Color fogColor = new Color(0.55f, 0.7f, 0.97f);
+        [Range(0f, 1f)] public float fogStartFraction = 0.45f;
+        [Range(0f, 1f)] public float fogEndFraction = 0.92f;
+        [Tooltip("Set a sky/ground gradient ambient so block faces get colored bounce light.")]
+        public bool configureAmbientLight = true;
+
         protected Dictionary<Vector2Int, TerrainChunk> chunkDictionary = new Dictionary<Vector2Int, TerrainChunk>();
         protected Vector2Int lastPlayerChunkCoord;
 
-        protected float voxelScale = 0.75f;
         protected int renderDistance = 2;
         protected int chunkSize = 32;
 
@@ -65,8 +89,8 @@ namespace World.Managers
             {
                 biomes = BiomeDefaults.CreateDefaults();
             }
-            biomeGenerator = new BiomeGenerator(noiseGenerator, biomes, seaLevel);
-            meshGenerator = new MeshGenerator(voxelScale);
+            biomeGenerator = new BiomeGenerator(noiseGenerator, biomes, seaLevel, generatePaths, pathColor, pathWidth, pathDepth, terraceHeight);
+            meshGenerator = new MeshGenerator(voxelScale, rockColor);
 
             foreach (Spawner spawner in spawners)
             {
@@ -77,11 +101,45 @@ namespace World.Managers
                 }
             }
 
+            ApplyAtmosphere();
+
             lastPlayerChunkCoord = GetChunkCoordFromPosition(player.position);
             RefreshPendingChunks(lastPlayerChunkCoord);
 
             // Generate the closest ring synchronously so the player starts on solid ground.
             GeneratePendingChunks(9);
+        }
+
+        /// <summary>
+        /// Sets up distance fog so terrain fades out just inside the loaded chunk
+        /// radius instead of popping in at the edge.
+        /// </summary>
+        private void ApplyAtmosphere()
+        {
+            if (configureFog)
+            {
+                float loadedRadius = renderDistance * chunkSize * voxelScale;
+                RenderSettings.fog = true;
+                RenderSettings.fogMode = FogMode.Linear;
+                RenderSettings.fogColor = fogColor;
+                RenderSettings.fogStartDistance = loadedRadius * fogStartFraction;
+                RenderSettings.fogEndDistance = loadedRadius * fogEndFraction;
+
+                Camera mainCamera = Camera.main;
+                if (mainCamera != null)
+                {
+                    // Everything past the loaded radius is solid fog; no need to render further.
+                    mainCamera.farClipPlane = loadedRadius * 1.15f;
+                }
+            }
+
+            if (configureAmbientLight)
+            {
+                RenderSettings.ambientMode = AmbientMode.Trilight;
+                RenderSettings.ambientSkyColor = new Color(0.52f, 0.62f, 0.8f);
+                RenderSettings.ambientEquatorColor = new Color(0.46f, 0.44f, 0.38f);
+                RenderSettings.ambientGroundColor = new Color(0.27f, 0.24f, 0.2f);
+            }
         }
 
         /// <summary>

@@ -30,12 +30,11 @@ namespace World.Managers
             chunk.UpdateChunkMesh(meshGenerator.GenerateMeshData(chunkData));
 
             // Spawn objects
-            int[,] heightMap = chunkData.BuildHeightMapInt();
             foreach (Spawner spawner in spawners)
             {
                 if (spawner != null)
                 {
-                    spawner.Spawn(chunk.chunkObject, heightMap, voxelScale, chunk.chunkSize, chunk.chunkCoord);
+                    spawner.Spawn(chunk.chunkObject, chunkData, voxelScale, chunk.chunkCoord);
                 }
             }
         }

@@ -12,18 +12,28 @@ namespace World.Biomes
     {
         // Fractal noise clusters around 0.5, so the raw climate values would almost
         // never reach the extremes where deserts, tundra, and mountains live.
-        private const float ClimateContrast = 1.8f;
+        private const float ClimateContrast = 1.6f;
 
         private readonly NoiseGenerator noise;
         private readonly IReadOnlyList<BiomeDefinition> biomes;
+        private readonly bool generatePaths;
+        private readonly Color pathColor;
+        private readonly float pathWidth;
+        private readonly float pathDepth;
+        private readonly float terraceHeight;
 
         /// <summary>Water level in blocks; reserved for the future water milestone.</summary>
         public float SeaLevel { get; }
 
-        public BiomeGenerator(NoiseGenerator noise, IReadOnlyList<BiomeDefinition> biomes, float seaLevel)
+        public BiomeGenerator(NoiseGenerator noise, IReadOnlyList<BiomeDefinition> biomes, float seaLevel, bool generatePaths, Color pathColor, float pathWidth, float pathDepth, float terraceHeight)
         {
             this.noise = noise;
             this.biomes = biomes;
+            this.generatePaths = generatePaths;
+            this.pathColor = pathColor;
+            this.pathWidth = pathWidth;
+            this.pathDepth = pathDepth;
+            this.terraceHeight = terraceHeight;
             SeaLevel = seaLevel;
         }
 
@@ -90,8 +100,13 @@ namespace World.Biomes
                 height += weights[i] / totalWeight * (biome.baseHeight + biome.amplitude * shape);
             }
 
+            height = ApplyTerracing(height);
+
             Color surface = Color.clear;
             Color cliff = Color.clear;
+            float treeDensity = 0f;
+            float grassDensity = 0f;
+            float boulderDensity = 0f;
             for (int i = 0; i < weights.Length; i++)
             {
                 if (weights[i] <= 0f)
@@ -104,19 +119,70 @@ namespace World.Biomes
                 float gradientTime = Mathf.Clamp01(Mathf.InverseLerp(biome.baseHeight, biome.baseHeight + biome.amplitude, height));
                 surface += weight * biome.surfaceGradient.Evaluate(gradientTime);
                 cliff += weight * biome.cliffColor;
+                treeDensity += weight * biome.treeDensity;
+                grassDensity += weight * biome.grassDensity;
+                boulderDensity += weight * biome.boulderDensity;
             }
 
             surface.a = 1f;
             cliff.a = 1f;
+
+            // Trails follow the midline contour of a broad noise field, which
+            // yields long connected winding paths across the world. The distance
+            // to the contour is estimated as |n - 0.5| / |gradient| so trails
+            // keep a constant width instead of blobbing out where the noise
+            // plateaus near its midline.
+            float pathMask = 0f;
+            if (generatePaths)
+            {
+                const float gradientStep = 2f;
+                float pathNoise = noise.Paths.Sample01(worldX, worldZ);
+                float gradX = noise.Paths.Sample01(worldX + gradientStep, worldZ) - pathNoise;
+                float gradZ = noise.Paths.Sample01(worldX, worldZ + gradientStep) - pathNoise;
+                float gradientPerBlock = Mathf.Sqrt(gradX * gradX + gradZ * gradZ) / gradientStep;
+                float distanceBlocks = Mathf.Abs(pathNoise - 0.5f) / Mathf.Max(gradientPerBlock, 0.0004f);
+                pathMask = 1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(pathWidth * 0.6f, pathWidth, distanceBlocks));
+                // Fade trails out on rugged mountain relief.
+                pathMask *= 1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.5f, 0.65f, relief));
+                surface = Color.Lerp(surface, pathColor, pathMask);
+
+                // Sink the trail bed below the surrounding terrain.
+                if (pathMask > 0.45f)
+                {
+                    height -= pathDepth;
+                }
+            }
 
             return new BiomeColumn
             {
                 height = height,
                 surfaceColor = surface,
                 cliffColor = cliff,
+                treeDensity = treeDensity,
+                grassDensity = grassDensity,
+                boulderDensity = boulderDensity,
+                pathMask = pathMask,
                 dominantBiome = (byte)dominant,
                 dominantWeight = weights[dominant] / totalWeight,
             };
+        }
+
+        /// <summary>
+        /// Snaps height into flat treads separated by sharp risers, turning smooth
+        /// rolling noise into rigid stepped hills.
+        /// </summary>
+        private float ApplyTerracing(float height)
+        {
+            if (terraceHeight < 0.01f)
+            {
+                return height;
+            }
+
+            const float riserWidth = 0.2f;
+            float steps = height / terraceHeight;
+            float tread = Mathf.Floor(steps);
+            float riser = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.5f - riserWidth, 0.5f + riserWidth, steps - tread));
+            return (tread + riser) * terraceHeight;
         }
 
         private static float Spread(float value)

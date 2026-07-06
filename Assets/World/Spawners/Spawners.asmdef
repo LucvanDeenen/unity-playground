@@ -2,6 +2,7 @@
     "name": "Spawners",
     "rootNamespace": "",
     "references": [
+        "GUID:5c5e625b138b4283968330666fea2f68",
         "GUID:4c6e2148fc5c12643a0f4e407a974a52",
         "GUID:b055adf5ba7cdb8458fc721617cf61a8"
     ],
