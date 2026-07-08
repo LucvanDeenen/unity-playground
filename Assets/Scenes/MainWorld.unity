@@ -307,7 +307,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1100453726045524278, guid: 214a29bdd397f334b9bd3e8df3a134b9, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0.030269952
+      value: -0.030269576
       objectReference: {fileID: 0}
     - target: {fileID: 1100453726045524278, guid: 214a29bdd397f334b9bd3e8df3a134b9, type: 3}
       propertyPath: m_LocalRotation.y
@@ -315,7 +315,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1100453726045524278, guid: 214a29bdd397f334b9bd3e8df3a134b9, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0.023226952
+      value: -0.023226663
       objectReference: {fileID: 0}
     - target: {fileID: 1676208532872089034, guid: 214a29bdd397f334b9bd3e8df3a134b9, type: 3}
       propertyPath: m_StepOffset
@@ -339,7 +339,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3410576234783597214, guid: 214a29bdd397f334b9bd3e8df3a134b9, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 20
+      value: 200
       objectReference: {fileID: 0}
     - target: {fileID: 3410576234783597214, guid: 214a29bdd397f334b9bd3e8df3a134b9, type: 3}
       propertyPath: m_LocalPosition.z
@@ -383,19 +383,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5636769110438722124, guid: 214a29bdd397f334b9bd3e8df3a134b9, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.7895666
+      value: 0.78956664
       objectReference: {fileID: 0}
     - target: {fileID: 5636769110438722124, guid: 214a29bdd397f334b9bd3e8df3a134b9, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0.07742169
+      value: -0.07742132
       objectReference: {fileID: 0}
     - target: {fileID: 5636769110438722124, guid: 214a29bdd397f334b9bd3e8df3a134b9, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0.60585576
+      value: -0.6058558
       objectReference: {fileID: 0}
     - target: {fileID: 5636769110438722124, guid: 214a29bdd397f334b9bd3e8df3a134b9, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0.059407752
+      value: -0.059407473
       objectReference: {fileID: 0}
     - target: {fileID: 6643865976777311789, guid: 214a29bdd397f334b9bd3e8df3a134b9, type: 3}
       propertyPath: m_LocalPosition.x
@@ -411,7 +411,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6643865976777311789, guid: 214a29bdd397f334b9bd3e8df3a134b9, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.006610615
+      value: 0.0066109924
       objectReference: {fileID: 0}
     - target: {fileID: 6643865976777311789, guid: 214a29bdd397f334b9bd3e8df3a134b9, type: 3}
       propertyPath: m_LocalRotation.y
@@ -419,7 +419,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6643865976777311789, guid: 214a29bdd397f334b9bd3e8df3a134b9, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0.005072504
+      value: 0.0050727935
       objectReference: {fileID: 0}
     - target: {fileID: 7592847232671578200, guid: 214a29bdd397f334b9bd3e8df3a134b9, type: 3}
       propertyPath: m_LocalPosition.x
@@ -529,16 +529,23 @@ MonoBehaviour:
   player: {fileID: 779800572}
   seed: 42
   voxelMaterial: {fileID: 2100000, guid: 7c480906a069a8a4b9b111d94052f14d, type: 2}
+  renderDistance: 12
   chunksPerFrame: 4
   voxelScale: 1
   terraceHeight: 8
-  rockColor: {r: 0.55, g: 0.55, b: 0.58, a: 1}
+  overhangStrength: 6
+  elevationRange: 32
+  landscapeScale: 2.2
+  wallColor: {r: 0.82, g: 0.72, b: 0.45, a: 1}
+  useFlatGroundColor: 1
+  flatGroundColor: {r: 0.16127355, g: 0.85882354, b: 0.14117645, a: 1}
   generatePaths: 1
-  pathColor: {r: 0.93, g: 0.8, b: 0.5, a: 1}
-  pathWidth: 5
+  pathColor: {r: 1, g: 0.46024236, b: 0.0141509175, a: 1}
+  pathWidth: 16
   pathDepth: 1
   biomes: []
   seaLevel: 8
+  spawnVegetation: 0
   spawners:
   - {fileID: 1844900049}
   configureFog: 1
@@ -546,6 +553,9 @@ MonoBehaviour:
   fogStartFraction: 0.45
   fogEndFraction: 0.92
   configureAmbientLight: 1
+  configureSky: 1
+  skyColor: {r: 0.35, g: 0.55, b: 0.95, a: 1}
+  configureSunLight: 1
 --- !u!114 &1844900049
 MonoBehaviour:
   m_ObjectHideFlags: 0

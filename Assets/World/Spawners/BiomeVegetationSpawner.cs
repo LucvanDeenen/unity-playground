@@ -36,7 +36,7 @@ namespace World.Spawners
             clusterNoiseScale = 0.05f,
             clusterWindow = new Vector2(0.35f, 0.6f),
             maxSlope = 1,
-            maxHeightBlocks = 30f,
+            maxHeightBlocks = 34f,
         };
 
         [Header("Grass (baked into one mesh per chunk)")]
@@ -47,7 +47,7 @@ namespace World.Spawners
             clusterNoiseScale = 0.08f,
             clusterWindow = new Vector2(0.25f, 0.5f),
             maxSlope = 2,
-            maxHeightBlocks = 40f,
+            maxHeightBlocks = 44f,
         };
 
         [Header("Boulders")]
@@ -65,6 +65,32 @@ namespace World.Spawners
         private const int TreeSalt = 1013;
         private const int GrassSalt = 2027;
         private const int BoulderSalt = 3041;
+
+        // Matte copies of prop materials, so vegetation gets the flat Cube World
+        // look instead of the Standard shader's specular sheen.
+        private readonly Dictionary<Material, Material> matteMaterials = new Dictionary<Material, Material>();
+
+        private Material GetMatteMaterial(Material source)
+        {
+            if (source == null)
+            {
+                return null;
+            }
+
+            if (!matteMaterials.TryGetValue(source, out Material matte))
+            {
+                matte = new Material(source);
+                matte.SetFloat("_Glossiness", 0f);
+                matte.SetFloat("_Metallic", 0f);
+                matte.SetFloat("_SpecularHighlights", 0f);
+                matte.SetFloat("_GlossyReflections", 0f);
+                matte.EnableKeyword("_SPECULARHIGHLIGHTS_OFF");
+                matte.EnableKeyword("_GLOSSYREFLECTIONS_OFF");
+                matteMaterials.Add(source, matte);
+            }
+
+            return matte;
+        }
 
         public override void Spawn(GameObject chunkObject, ChunkData chunkData, float voxelScale, Vector2Int chunkCoord)
         {
@@ -106,6 +132,7 @@ namespace World.Spawners
                     GameObject prefab = prefabs[prng.Next(prefabs.Length)];
                     GameObject instance = Instantiate(prefab, position, GetConstrainedRotation(prng), chunkObject.transform);
                     instance.transform.localScale *= (float)(prng.NextDouble() * 0.2 + 0.9);
+                    ApplyMatteMaterials(instance);
                     placementManager.RegisterObjectPosition(position);
                 }
             }
@@ -191,8 +218,22 @@ namespace World.Spawners
             foliage.transform.SetParent(chunkObject.transform, false);
             foliage.AddComponent<MeshFilter>().mesh = baked;
             MeshRenderer bakedRenderer = foliage.AddComponent<MeshRenderer>();
-            bakedRenderer.sharedMaterial = material;
+            bakedRenderer.sharedMaterial = GetMatteMaterial(material);
             bakedRenderer.shadowCastingMode = ShadowCastingMode.Off;
+        }
+
+        private void ApplyMatteMaterials(GameObject instance)
+        {
+            foreach (MeshRenderer renderer in instance.GetComponentsInChildren<MeshRenderer>())
+            {
+                Material[] materials = renderer.sharedMaterials;
+                for (int i = 0; i < materials.Length; i++)
+                {
+                    materials[i] = GetMatteMaterial(materials[i]);
+                }
+
+                renderer.sharedMaterials = materials;
+            }
         }
 
         private bool TryPickSpawn(ChunkData chunkData, CategorySettings settings, int salt, Func<BiomeColumn, float> density, float voxelScale, Vector2Int chunkCoord, Vector3 chunkPosition, int x, int z, out Vector3 position, out System.Random prng)
@@ -201,7 +242,9 @@ namespace World.Spawners
             prng = null;
 
             BiomeColumn column = chunkData.GetColumn(x, z);
-            if (column.height > settings.maxHeightBlocks)
+            // Tree lines are relative to the local landscape, so highland plains
+            // keep their vegetation while mountain flanks lose theirs.
+            if (column.localHeight > settings.maxHeightBlocks)
             {
                 return false;
             }

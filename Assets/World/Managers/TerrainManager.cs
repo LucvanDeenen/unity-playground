@@ -23,21 +23,40 @@ namespace World.Managers
         [Header("Terrain Settings")]
         public int seed = 42;
         public Material voxelMaterial;
+        [Tooltip("How many chunks to keep loaded in every direction around the player; fog and far plane scale with it.")]
+        [Range(4, 240)] public int renderDistance = 12;
         [Tooltip("How many chunks may be generated per frame.")]
         public int chunksPerFrame = 4;
         [Tooltip("World size of one block; around half the player's height gives the Cube World feel.")]
         public float voxelScale = 1f;
-        [Tooltip("Terrain snaps to flat treads with risers of this many blocks; 0 disables terracing.")]
-        [Range(0f, 8f)] public float terraceHeight = 4f;
-        [Tooltip("Color of tall exposed walls; shallow steps keep the surface color.")]
-        public Color rockColor = new Color(0.55f, 0.55f, 0.58f);
+        [Tooltip("Mountainsides snap into flat ledges with risers of this many blocks; 0 disables. Rolling terrain keeps its smooth one-block steps.")]
+        [Range(0f, 8f)] public float terraceHeight = 0f;
+        [Tooltip("How many blocks the 3D noise may cut into slopes, creating overhangs and undercuts; 0 disables.")]
+        [Range(0f, 10f)] public float overhangStrength = 6f;
+        [Tooltip("Blocks of continental elevation sweep from lowlands to highlands; mountain ranges cluster on the high ground.")]
+        [Range(0f, 60f)] public float elevationRange = 24f;
+        [Tooltip("Multiplies the size of all landforms; higher = broader, more sweeping landscape.")]
+        [Range(0.5f, 5f)] public float landscapeScale = 1.5f;
+        [Tooltip("Single color of all exposed side walls (mud/cliff faces).")]
+        public Color wallColor = new Color(0.736f, 0.580f, 0.149f);
+        [Tooltip("Ignore biome palettes and color all ground uniformly, to iterate on terrain shape.")]
+        public bool useFlatGroundColor = true;
+        public Color flatGroundColor = new Color(0.142f, 0.858f, 0.424f);
+
+        [Header("Landmarks")]
+        [Tooltip("Scatter rare set-piece landforms: sheer boulder mountains and dished valley bowls.")]
+        public bool generateLandmarks = true;
+        [Tooltip("Height in blocks of boulder-mountain walls above the surrounding ground.")]
+        [Range(20f, 90f)] public float boulderMountainHeight = 55f;
+        [Tooltip("How many blocks landmark valleys dish below the surrounding ground.")]
+        [Range(0f, 16f)] public float valleyDepth = 10f;
 
         [Header("Paths")]
         [Tooltip("Weave winding trails through the terrain colors.")]
         public bool generatePaths = true;
-        public Color pathColor = new Color(0.93f, 0.8f, 0.5f);
+        public Color pathColor = new Color(1.000f, 0.460f, 0.015f);
         [Tooltip("Approximate trail width in blocks.")]
-        [Range(1f, 8f)] public float pathWidth = 5f;
+        [Range(1f, 16f)] public float pathWidth = 16f;
         [Tooltip("How many blocks trails sink below the surrounding terrain.")]
         [Range(0f, 3f)] public float pathDepth = 1f;
 
@@ -48,6 +67,8 @@ namespace World.Managers
         public float seaLevel = 8f;
 
         [Header("Spawners")]
+        [Tooltip("Master switch for trees, grass, and boulders while iterating on terrain.")]
+        public bool spawnVegetation = false;
         public List<Spawner> spawners = new List<Spawner>();
 
         [Header("Atmosphere")]
@@ -58,11 +79,15 @@ namespace World.Managers
         [Range(0f, 1f)] public float fogEndFraction = 0.92f;
         [Tooltip("Set a sky/ground gradient ambient so block faces get colored bounce light.")]
         public bool configureAmbientLight = true;
+        [Tooltip("Replace the skybox with a solid vivid sky color behind the fog.")]
+        public bool configureSky = true;
+        public Color skyColor = new Color(0.35f, 0.55f, 0.95f);
+        [Tooltip("Give the directional light a warm sunny tint at full intensity.")]
+        public bool configureSunLight = true;
 
         protected Dictionary<Vector2Int, TerrainChunk> chunkDictionary = new Dictionary<Vector2Int, TerrainChunk>();
         protected Vector2Int lastPlayerChunkCoord;
 
-        protected int renderDistance = 2;
         protected int chunkSize = 32;
 
         protected ObjectPlacementManager placementManager;
@@ -84,13 +109,28 @@ namespace World.Managers
 
             placementManager = GetComponent<ObjectPlacementManager>();
 
-            noiseGenerator = new NoiseGenerator(seed);
+            noiseGenerator = new NoiseGenerator(seed, landscapeScale);
             if (biomes == null || biomes.Count == 0)
             {
                 biomes = BiomeDefaults.CreateDefaults();
             }
-            biomeGenerator = new BiomeGenerator(noiseGenerator, biomes, seaLevel, generatePaths, pathColor, pathWidth, pathDepth, terraceHeight);
-            meshGenerator = new MeshGenerator(voxelScale, rockColor);
+            biomeGenerator = new BiomeGenerator(noiseGenerator, biomes, new BiomeGenerator.Settings
+            {
+                seaLevel = seaLevel,
+                generatePaths = generatePaths,
+                pathColor = pathColor,
+                pathWidth = pathWidth,
+                pathDepth = pathDepth,
+                terraceHeight = terraceHeight,
+                useFlatGroundColor = useFlatGroundColor,
+                flatGroundColor = flatGroundColor,
+                overhangStrength = overhangStrength,
+                elevationRange = elevationRange,
+                generateLandmarks = generateLandmarks,
+                boulderMountainHeight = boulderMountainHeight,
+                valleyDepth = valleyDepth,
+            });
+            meshGenerator = new MeshGenerator(voxelScale, wallColor);
 
             foreach (Spawner spawner in spawners)
             {
@@ -116,6 +156,8 @@ namespace World.Managers
         /// </summary>
         private void ApplyAtmosphere()
         {
+            Camera mainCamera = Camera.main;
+
             if (configureFog)
             {
                 float loadedRadius = renderDistance * chunkSize * voxelScale;
@@ -125,7 +167,6 @@ namespace World.Managers
                 RenderSettings.fogStartDistance = loadedRadius * fogStartFraction;
                 RenderSettings.fogEndDistance = loadedRadius * fogEndFraction;
 
-                Camera mainCamera = Camera.main;
                 if (mainCamera != null)
                 {
                     // Everything past the loaded radius is solid fog; no need to render further.
@@ -133,12 +174,40 @@ namespace World.Managers
                 }
             }
 
+            if (configureSky && mainCamera != null)
+            {
+                mainCamera.clearFlags = CameraClearFlags.SolidColor;
+                mainCamera.backgroundColor = skyColor;
+            }
+
+            if (configureSunLight)
+            {
+                Light sun = RenderSettings.sun;
+                if (sun == null)
+                {
+                    foreach (Light light in FindObjectsByType<Light>(FindObjectsSortMode.None))
+                    {
+                        if (light.type == LightType.Directional)
+                        {
+                            sun = light;
+                            break;
+                        }
+                    }
+                }
+
+                if (sun != null)
+                {
+                    sun.color = new Color(1f, 0.96f, 0.86f);
+                    sun.intensity = 1.05f;
+                }
+            }
+
             if (configureAmbientLight)
             {
                 RenderSettings.ambientMode = AmbientMode.Trilight;
-                RenderSettings.ambientSkyColor = new Color(0.52f, 0.62f, 0.8f);
-                RenderSettings.ambientEquatorColor = new Color(0.46f, 0.44f, 0.38f);
-                RenderSettings.ambientGroundColor = new Color(0.27f, 0.24f, 0.2f);
+                RenderSettings.ambientSkyColor = new Color(0.45f, 0.6f, 0.9f);
+                RenderSettings.ambientEquatorColor = new Color(0.5f, 0.47f, 0.4f);
+                RenderSettings.ambientGroundColor = new Color(0.28f, 0.24f, 0.18f);
             }
         }
 

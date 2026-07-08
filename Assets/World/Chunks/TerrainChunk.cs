@@ -24,6 +24,12 @@ namespace World.Chunks
             voxelMaterial = material;
 
             chunkObject = new GameObject($"Chunk_{chunkCoord.x}_{chunkCoord.y}");
+            // The player's ground check only detects the "Ground" layer.
+            int groundLayer = LayerMask.NameToLayer("Ground");
+            if (groundLayer >= 0)
+            {
+                chunkObject.layer = groundLayer;
+            }
             chunkObject.transform.parent = parent;
             chunkObject.transform.position = new Vector3(chunkCoord.x * chunkSize, 0, chunkCoord.y * chunkSize) * voxelScale;
         }

@@ -10,12 +10,6 @@ namespace World.Managers
     /// </summary>
     public class WorldTerrainManager : TerrainManager
     {
-        protected override void Start()
-        {
-            renderDistance = 12;
-            base.Start();
-        }
-
         void Update()
         {
             UpdateChunks();
@@ -30,6 +24,11 @@ namespace World.Managers
             chunk.UpdateChunkMesh(meshGenerator.GenerateMeshData(chunkData));
 
             // Spawn objects
+            if (!spawnVegetation)
+            {
+                return;
+            }
+
             foreach (Spawner spawner in spawners)
             {
                 if (spawner != null)

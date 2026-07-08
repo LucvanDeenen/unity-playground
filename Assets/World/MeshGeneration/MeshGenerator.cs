@@ -4,30 +4,34 @@ using World.Biomes;
 namespace World.MeshGeneration
 {
     /// <summary>
-    /// Generates voxel column mesh data from generated chunk data.
+    /// Generates voxel mesh data from per-column solidity masks. Everything
+    /// renders as unit blocks — flat tops and vertical faces — so hillsides read
+    /// as staircases of visible cubes; the gradual Cube World feel comes from
+    /// broad, low-slope landforms, not from smoothing the mesh.
     /// </summary>
     public class MeshGenerator
     {
-        // Blocks below the surface that keep the (darkened) surface color, so
-        // grass wraps over terrace edges; then a band of the biome cliff color;
-        // anything deeper is bare rock.
-        private const int SurfaceWrapDepth = 1;
-        private const int CliffBandDepth = 4;
+        // Walls up to this many blocks tall stay grass-colored (the surface
+        // wraps over shallow steps); taller cliff faces show the mud wall color.
+        private const int GrassWrapMaxSpan = 2;
 
         private readonly float voxelScale;
-        private readonly Color rockColor;
+        private readonly Color wallColor;
+        private readonly Color ceilingColor;
 
-        public MeshGenerator(float voxelScale, Color rockColor)
+        public MeshGenerator(float voxelScale, Color wallColor)
         {
             this.voxelScale = voxelScale;
-            this.rockColor = rockColor;
+            this.wallColor = wallColor;
+
+            ceilingColor = wallColor * 0.7f;
+            ceilingColor.a = 1f;
         }
 
         /// <summary>
-        /// Generates mesh data for a chunk. Top faces use the column's blended biome
-        /// surface color; exposed side faces use the blended cliff color. The chunk
-        /// data's one-column border resolves face visibility across chunk seams, so
-        /// only faces that can actually be seen are emitted.
+        /// Generates mesh data for a chunk, using the chunk data's one-column
+        /// border to resolve which side faces are exposed, so adjacent chunks
+        /// meet without gaps or duplicated walls.
         /// </summary>
         public MeshData GenerateMeshData(ChunkData chunkData)
         {
@@ -39,60 +43,95 @@ namespace World.MeshGeneration
                 for (int z = 0; z < chunkSize; z++)
                 {
                     BiomeColumn column = chunkData.GetColumn(x, z);
-                    int topY = Mathf.Max(0, Mathf.FloorToInt(column.height));
+                    if (column.solidMask.IsEmpty)
+                    {
+                        continue;
+                    }
 
-                    AddVoxelFace(meshData, new Vector3(x, topY, z) * voxelScale, Vector3.up, column.surfaceColor);
-
-                    AddExposedSideFaces(meshData, chunkData, x, z, topY, Vector3.left, x - 1, z, column);
-                    AddExposedSideFaces(meshData, chunkData, x, z, topY, Vector3.right, x + 1, z, column);
-                    AddExposedSideFaces(meshData, chunkData, x, z, topY, Vector3.back, x, z - 1, column);
-                    AddExposedSideFaces(meshData, chunkData, x, z, topY, Vector3.forward, x, z + 1, column);
+                    AddColumn(meshData, chunkData, x, z, Mathf.FloorToInt(column.height), column);
                 }
             }
 
             return meshData;
         }
 
-        /// <summary>
-        /// Adds side faces for the span where this column rises above its neighbor.
-        /// Columns whose neighbor is equal or higher emit nothing; the taller
-        /// neighbor draws the shared wall from its own side.
-        /// </summary>
-        private void AddExposedSideFaces(MeshData meshData, ChunkData chunkData, int x, int z, int topY, Vector3 direction, int neighborX, int neighborZ, BiomeColumn column)
+        private void AddColumn(MeshData meshData, ChunkData chunkData, int x, int z, int topY, in BiomeColumn column)
         {
-            int neighborTopY = Mathf.FloorToInt(chunkData.GetColumn(neighborX, neighborZ).height);
+            SolidMask mask = column.solidMask;
 
-            for (int y = Mathf.Max(0, neighborTopY + 1); y <= topY; y++)
+            for (int y = 0; y <= topY; y++)
             {
-                AddVoxelFace(meshData, new Vector3(x, y, z) * voxelScale, direction, GetSideColor(column, topY - y));
+                if (!mask.IsSolid(y))
+                {
+                    continue;
+                }
+
+                if (!mask.IsSolid(y + 1))
+                {
+                    AddVoxelFace(meshData, new Vector3(x, y, z) * voxelScale, Vector3.up, column.surfaceColor);
+                }
+
+                // Skip the world floor at y = 0.
+                if (y > 0 && !mask.IsSolid(y - 1))
+                {
+                    AddVoxelFace(meshData, new Vector3(x, y, z) * voxelScale, Vector3.down, ceilingColor);
+                }
+            }
+
+            AddExposedSideFaces(meshData, x, z, mask, chunkData.GetColumn(x - 1, z), topY, Vector3.left, column);
+            AddExposedSideFaces(meshData, x, z, mask, chunkData.GetColumn(x + 1, z), topY, Vector3.right, column);
+            AddExposedSideFaces(meshData, x, z, mask, chunkData.GetColumn(x, z - 1), topY, Vector3.back, column);
+            AddExposedSideFaces(meshData, x, z, mask, chunkData.GetColumn(x, z + 1), topY, Vector3.forward, column);
+        }
+
+        /// <summary>
+        /// Adds side faces where this column is solid and the neighbor is air.
+        /// Short spans and every span's lip block wrap in surface color; the
+        /// rest of a tall face shows the wall color.
+        /// </summary>
+        private void AddExposedSideFaces(MeshData meshData, int x, int z, in SolidMask mask, in BiomeColumn neighbor, int topY, Vector3 direction, in BiomeColumn column)
+        {
+            Color grassWrap = column.surfaceColor * 0.8f;
+            grassWrap.a = 1f;
+
+            int y = 0;
+            while (y <= topY)
+            {
+                if (!mask.IsSolid(y) || neighbor.solidMask.IsSolid(y))
+                {
+                    y++;
+                    continue;
+                }
+
+                int spanStart = y;
+                while (y <= topY && mask.IsSolid(y) && !neighbor.solidMask.IsSolid(y))
+                {
+                    y++;
+                }
+
+                int spanTop = y - 1;
+                int span = spanTop - spanStart + 1;
+
+                for (int faceY = spanStart; faceY <= spanTop; faceY++)
+                {
+                    Color color = span <= GrassWrapMaxSpan || faceY == spanTop ? grassWrap : wallColor;
+                    AddVoxelFace(meshData, new Vector3(x, faceY, z) * voxelScale, direction, color);
+                }
             }
         }
 
         /// <summary>
-        /// Picks the wall color by depth below the surface: surface color wraps
-        /// over shallow steps, tall walls turn to bare rock.
+        /// Adds a quad from four explicit vertices.
         /// </summary>
-        private Color GetSideColor(BiomeColumn column, int depth)
+        private void AddQuad(MeshData meshData, Vector3 v0, Vector3 v1, Vector3 v2, Vector3 v3, Color color)
         {
-            if (depth <= SurfaceWrapDepth)
-            {
-                Color wrapped = column.surfaceColor * 0.8f;
-                wrapped.a = 1f;
-                return wrapped;
-            }
-
-            return depth <= CliffBandDepth ? column.cliffColor : rockColor;
-        }
-
-        /// <summary>
-        /// Adds a single voxel face to the mesh data.
-        /// </summary>
-        private void AddVoxelFace(MeshData meshData, Vector3 position, Vector3 direction, Color color)
-        {
-            Vector3[] faceVertices = GetFaceVertices(position, direction);
             int vertexIndex = meshData.vertices.Count;
 
-            meshData.vertices.AddRange(faceVertices);
+            meshData.vertices.Add(v0);
+            meshData.vertices.Add(v1);
+            meshData.vertices.Add(v2);
+            meshData.vertices.Add(v3);
+
             meshData.triangles.Add(vertexIndex + 0);
             meshData.triangles.Add(vertexIndex + 1);
             meshData.triangles.Add(vertexIndex + 2);
@@ -115,6 +154,15 @@ namespace World.MeshGeneration
         }
 
         /// <summary>
+        /// Adds a single axis-aligned voxel face.
+        /// </summary>
+        private void AddVoxelFace(MeshData meshData, Vector3 position, Vector3 direction, Color color)
+        {
+            Vector3[] faceVertices = GetFaceVertices(position, direction);
+            AddQuad(meshData, faceVertices[0], faceVertices[1], faceVertices[2], faceVertices[3], color);
+        }
+
+        /// <summary>
         /// Retrieves the vertices for a given face direction.
         /// </summary>
         private Vector3[] GetFaceVertices(Vector3 position, Vector3 direction)
@@ -128,6 +176,13 @@ namespace World.MeshGeneration
                 faceVertices[1] = position + new Vector3(0, s, s);
                 faceVertices[2] = position + new Vector3(s, s, s);
                 faceVertices[3] = position + new Vector3(s, s, 0);
+            }
+            else if (direction == Vector3.down)
+            {
+                faceVertices[0] = position + new Vector3(0, 0, s);
+                faceVertices[1] = position + new Vector3(0, 0, 0);
+                faceVertices[2] = position + new Vector3(s, 0, 0);
+                faceVertices[3] = position + new Vector3(s, 0, s);
             }
             else if (direction == Vector3.left)
             {
